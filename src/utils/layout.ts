@@ -28,6 +28,7 @@ export function layout(title: string, bodyContent: string, extraHead: string = '
       }
     }
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.0/dist/axios.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css" rel="stylesheet">
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -53,7 +54,6 @@ export function layout(title: string, bodyContent: string, extraHead: string = '
 </head>
 <body class="bg-gray-50 min-h-screen">
   ${bodyContent}
-  <script src="https://cdn.jsdelivr.net/npm/axios@1.7.0/dist/axios.min.js"></script>
 </body>
 </html>`
 }

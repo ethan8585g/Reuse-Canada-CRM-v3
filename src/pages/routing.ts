@@ -54,7 +54,15 @@ export function renderRouting(): string {
             <div id="route-info" class="text-sm text-gray-500"></div>
           </div>
           <!-- Google Maps -->
-          <div id="map-container" class="h-[400px] bg-gray-100 relative"></div>
+          <div id="map-container" class="h-[400px] bg-gray-100 relative">
+            <div id="map-placeholder" class="flex items-center justify-center h-full">
+              <div class="text-center">
+                <i class="fas fa-map-marked-alt text-4xl text-blue-300 mb-3"></i>
+                <p class="text-gray-500 font-semibold">Loading Google Maps...</p>
+                <p class="text-xs text-gray-400 mt-1">Edmonton, Alberta</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Route Stops Detail -->
@@ -342,19 +350,44 @@ export function renderRouting(): string {
       let gMarkers = [];
       let gDirectionsRenderer = null;
       let gmapsLoaded = false;
+      let gmapsLoadFailed = false;
 
       async function initGoogleMaps() {
         if (gmapsLoaded) return;
         try {
           const res = await axios.get('/api/config/maps-key');
           const key = res.data.key;
-          if (!key) return;
+          if (!key) {
+            console.warn('No Google Maps API key configured');
+            showMapFallback('No Google Maps API key configured. Add GOOGLE_MAPS_API_KEY to .dev.vars');
+            return;
+          }
           const script = document.createElement('script');
           script.src = 'https://maps.googleapis.com/maps/api/js?key=' + key + '&libraries=places,geometry&callback=onGMapsReady';
           script.async = true;
           script.defer = true;
+          script.onerror = function() {
+            gmapsLoadFailed = true;
+            showMapFallback('Failed to load Google Maps. Check API key and billing.');
+          };
           document.head.appendChild(script);
-        } catch(e) { console.error('Maps key fetch failed:', e); }
+          // Timeout fallback if Google Maps takes too long
+          setTimeout(function() {
+            if (!gmapsLoaded && !gmapsLoadFailed) {
+              showMapFallback('Google Maps is loading slowly... Check your API key and internet connection.');
+            }
+          }, 10000);
+        } catch(e) {
+          console.error('Maps key fetch failed:', e);
+          showMapFallback('Could not fetch Maps API key from server.');
+        }
+      }
+
+      function showMapFallback(message) {
+        const placeholder = document.getElementById('map-placeholder');
+        if (placeholder) {
+          placeholder.innerHTML = '<div class="text-center"><i class="fas fa-exclamation-triangle text-3xl text-yellow-400 mb-3"></i><p class="text-gray-500 font-semibold text-sm">' + message + '</p><p class="text-xs text-gray-400 mt-2">Routes will still work — map is optional</p></div>';
+        }
       }
 
       window.onGMapsReady = function() {

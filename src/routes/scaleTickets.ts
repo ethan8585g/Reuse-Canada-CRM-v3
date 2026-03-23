@@ -81,7 +81,7 @@ scaleTicketRoutes.get('/:id', async (c) => {
 // Create new scale ticket (from office/yard)
 scaleTicketRoutes.post('/', async (c) => {
   try {
-    const { customer_id, tire_type, notes } = await c.req.json()
+    const { customer_id, tire_type, notes, vehicle_plate } = await c.req.json()
     const employeeId = c.get('userId')
     
     if (!customer_id) {
@@ -91,9 +91,9 @@ scaleTicketRoutes.post('/', async (c) => {
     const ticketNumber = await generateTicketNumber(c.env.DB)
     
     const result = await c.env.DB.prepare(
-      `INSERT INTO scale_tickets (ticket_number, customer_id, employee_id, tire_type, notes, status)
-       VALUES (?, ?, ?, ?, ?, 'field_pending')`
-    ).bind(ticketNumber, customer_id, employeeId, tire_type || 'mixed', notes || null).run()
+      `INSERT INTO scale_tickets (ticket_number, customer_id, employee_id, tire_type, notes, vehicle_plate, status)
+       VALUES (?, ?, ?, ?, ?, ?, 'field_pending')`
+    ).bind(ticketNumber, customer_id, employeeId, tire_type || 'mixed', notes || null, vehicle_plate || null).run()
 
     return c.json({ success: true, id: result.meta.last_row_id, ticket_number: ticketNumber })
   } catch (err: any) {
@@ -209,6 +209,59 @@ scaleTicketRoutes.post('/:id/weight', async (c) => {
     } else {
       return c.json({ error: 'Type must be "in" or "out"' }, 400)
     }
+
+    return c.json({ success: true })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// Finalize ticket with pricing
+scaleTicketRoutes.post('/:id/finalize', async (c) => {
+  const id = c.req.param('id')
+  try {
+    const { price_per_kg, total_amount, tax_amount, grand_total } = await c.req.json()
+    
+    await c.env.DB.prepare(
+      `UPDATE scale_tickets SET 
+        price_per_kg = ?, total_amount = ?, tax_rate = 0.05,
+        tax_amount = ?, grand_total = ?,
+        updated_at = datetime('now')
+       WHERE id = ?`
+    ).bind(price_per_kg || 0, total_amount || 0, tax_amount || 0, grand_total || 0, id).run()
+
+    return c.json({ success: true })
+  } catch (err: any) {
+    return c.json({ error: err.message }, 500)
+  }
+})
+
+// Update payment status
+scaleTicketRoutes.post('/:id/payment', async (c) => {
+  const id = c.req.param('id')
+  try {
+    const { payment_status, payment_method, square_payment_id, square_checkout_id } = await c.req.json()
+    
+    await c.env.DB.prepare(
+      `UPDATE scale_tickets SET 
+        payment_status = ?, payment_method = ?,
+        square_payment_id = ?, square_checkout_id = ?,
+        updated_at = datetime('now')
+       WHERE id = ?`
+    ).bind(
+      payment_status || 'paid', 
+      payment_method || 'card',
+      square_payment_id || null,
+      square_checkout_id || null,
+      id
+    ).run()
+
+    // Log payment
+    const ticket = await c.env.DB.prepare('SELECT grand_total FROM scale_tickets WHERE id = ?').bind(id).first()
+    await c.env.DB.prepare(
+      `INSERT INTO payment_log (scale_ticket_id, amount, payment_method, square_payment_id, square_checkout_id, status)
+       VALUES (?, ?, ?, ?, ?, 'completed')`
+    ).bind(id, ticket?.grand_total || 0, payment_method || 'card', square_payment_id || null, square_checkout_id || null).run()
 
     return c.json({ success: true })
   } catch (err: any) {

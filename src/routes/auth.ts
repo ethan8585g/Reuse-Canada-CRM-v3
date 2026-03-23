@@ -26,13 +26,28 @@ authRoutes.post('/login', async (c) => {
     let user: any = null
     
     if (user_type === 'customer') {
+      // Customer login: match by email field (can be username or email)
+      const loginVal = email.trim()
       user = await c.env.DB.prepare(
         'SELECT id, email, company_name, contact_name, phone, address, city, province, postal_code, password_hash FROM customers WHERE email = ? AND is_active = 1'
-      ).bind(email.toLowerCase().trim()).first()
+      ).bind(loginVal).first()
+      // Also try case-insensitive match
+      if (!user) {
+        user = await c.env.DB.prepare(
+          'SELECT id, email, company_name, contact_name, phone, address, city, province, postal_code, password_hash FROM customers WHERE LOWER(email) = LOWER(?) AND is_active = 1'
+        ).bind(loginVal).first()
+      }
     } else if (user_type === 'employee') {
+      // Employee login: match by email, case-insensitive
+      const loginVal = email.trim()
       user = await c.env.DB.prepare(
         'SELECT id, email, first_name, last_name, phone, role, password_hash FROM employees WHERE email = ? AND is_active = 1'
-      ).bind(email.toLowerCase().trim()).first()
+      ).bind(loginVal).first()
+      if (!user) {
+        user = await c.env.DB.prepare(
+          'SELECT id, email, first_name, last_name, phone, role, password_hash FROM employees WHERE LOWER(email) = LOWER(?) AND is_active = 1'
+        ).bind(loginVal).first()
+      }
     } else {
       return c.json({ error: 'Invalid user type' }, 400)
     }

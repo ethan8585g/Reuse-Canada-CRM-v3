@@ -35,11 +35,11 @@ export function renderLogin(): string {
             <form id="customer-login-form" onsubmit="handleCustomerLogin(event)">
               <div class="mb-5">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
-                  <i class="fas fa-envelope mr-1 text-rc-green"></i> Email Address
+                  <i class="fas fa-user mr-1 text-rc-green"></i> Username
                 </label>
-                <input type="email" id="customer-email" required
+                <input type="text" id="customer-email" required
                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rc-green focus:ring-2 focus:ring-green-100 transition-all outline-none"
-                  placeholder="your@company.ca">
+                  placeholder="Enter your username">
               </div>
               <div class="mb-6">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -84,9 +84,9 @@ export function renderLogin(): string {
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
                   <i class="fas fa-envelope mr-1 text-rc-gray"></i> Employee Email
                 </label>
-                <input type="email" id="employee-email" required
+                <input type="text" id="employee-email" required
                   class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rc-gray focus:ring-2 focus:ring-gray-100 transition-all outline-none"
-                  placeholder="name@reusecanada.ca">
+                  placeholder="name@reuse-canada.ca">
               </div>
               <div class="mb-6">
                 <label class="block text-sm font-semibold text-gray-700 mb-2">

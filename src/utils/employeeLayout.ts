@@ -2,7 +2,8 @@
 export function employeeSidebar(activePage: string): string {
   const navItems = [
     { id: 'dashboard', icon: 'fas fa-tachometer-alt', label: 'Dashboard', href: '/employee/dashboard' },
-    { id: 'scale-tickets', icon: 'fas fa-weight', label: 'Scale Tickets', href: '/employee/scale-tickets' },
+    { id: 'scale-house', icon: 'fas fa-balance-scale', label: 'Scale House', href: '/employee/scale-house' },
+    { id: 'scale-tickets', icon: 'fas fa-receipt', label: 'Ticket History', href: '/employee/scale-tickets' },
     { id: 'pickups', icon: 'fas fa-truck-pickup', label: 'Pickup Requests', href: '/employee/pickups' },
     { id: 'routing', icon: 'fas fa-route', label: 'Routing', href: '/employee/routing' },
   ];

@@ -83,12 +83,12 @@ export function renderEmployeeDashboard(): string {
     <div class="mt-8">
       <h2 class="font-bold text-gray-800 mb-4">Quick Actions</h2>
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <a href="/employee/scale-tickets" class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 card-hover text-center group">
+        <a href="/employee/scale-house" class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 card-hover text-center group">
           <div class="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-orange-200 transition-colors">
-            <i class="fas fa-plus-circle text-2xl text-rc-orange"></i>
+            <i class="fas fa-balance-scale text-2xl text-rc-orange"></i>
           </div>
-          <div class="font-semibold text-gray-700">New Scale Ticket</div>
-          <div class="text-xs text-gray-400 mt-1">Start a new ticket</div>
+          <div class="font-semibold text-gray-700">Scale House</div>
+          <div class="text-xs text-gray-400 mt-1">Weigh-in / Weigh-out</div>
         </a>
         <a href="/employee/pickups" class="bg-white rounded-xl p-5 shadow-sm border border-gray-100 card-hover text-center group">
           <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:bg-green-200 transition-colors">

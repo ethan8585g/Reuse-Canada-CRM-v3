@@ -2,22 +2,27 @@
 -- SEED DATA FOR DEVELOPMENT
 -- ============================================
 
--- Admin employee (password: admin123)
-INSERT OR IGNORE INTO employees (email, password_hash, first_name, last_name, phone, role) VALUES 
-  ('admin@reusecanada.ca', 'admin123', 'Admin', 'User', '780-555-0100', 'admin');
+-- ═══ PRIMARY CREDENTIALS ═══
 
--- Driver employees (password: driver123)
+-- Reuse Canada Employee - Ethan
 INSERT OR IGNORE INTO employees (email, password_hash, first_name, last_name, phone, role) VALUES 
+  ('Ethan@reuse-canada.ca', 'Tires123!', 'Ethan', 'Reuse', '780-555-0100', 'admin');
+
+-- Additional employees
+INSERT OR IGNORE INTO employees (email, password_hash, first_name, last_name, phone, role) VALUES 
+  ('admin@reusecanada.ca', 'admin123', 'Admin', 'User', '780-555-0110', 'admin'),
   ('mike@reusecanada.ca', 'driver123', 'Mike', 'Johnson', '780-555-0101', 'driver'),
-  ('sarah@reusecanada.ca', 'driver123', 'Sarah', 'Williams', '780-555-0102', 'driver');
-
--- Yard operator (password: yard123)
-INSERT OR IGNORE INTO employees (email, password_hash, first_name, last_name, phone, role) VALUES 
+  ('sarah@reusecanada.ca', 'driver123', 'Sarah', 'Williams', '780-555-0102', 'driver'),
   ('james@reusecanada.ca', 'yard123', 'James', 'Brown', '780-555-0103', 'yard_operator');
 
--- Test customers (password: customer123)
+-- ═══ PRIMARY CUSTOMER ═══
+
+-- Kal Tire - Customer Login
 INSERT OR IGNORE INTO customers (email, password_hash, company_name, contact_name, phone, address, city, province, postal_code, lat, lng) VALUES 
-  ('info@kaltireauto.ca', 'customer123', 'Kal Tire - Edmonton South', 'David Chen', '780-555-0201', '3803 Calgary Trail NW', 'Edmonton', 'AB', 'T6J 2A8', 53.4822, -113.4909),
+  ('KALTIRE', 'TIRES!', 'Kal Tire - Edmonton South', 'David Chen', '780-555-0201', '3803 Calgary Trail NW', 'Edmonton', 'AB', 'T6J 2A8', 53.4822, -113.4909);
+
+-- Additional test customers
+INSERT OR IGNORE INTO customers (email, password_hash, company_name, contact_name, phone, address, city, province, postal_code, lat, lng) VALUES 
   ('manager@canadiantire362.ca', 'customer123', 'Canadian Tire #362', 'Lisa Park', '780-555-0202', '14023 Victoria Trail NW', 'Edmonton', 'AB', 'T5Y 0S4', 53.6010, -113.4170),
   ('ops@fountaintire.ca', 'customer123', 'Fountain Tire - Sherwood Park', 'Robert Miller', '780-555-0203', '975 Broadmoor Blvd', 'Sherwood Park', 'AB', 'T8A 5W9', 53.5344, -113.2780),
   ('contact@ok-tire-leduc.ca', 'customer123', 'OK Tire - Leduc', 'Angela Torres', '780-555-0204', '4710 50 Ave', 'Leduc', 'AB', 'T9E 6W3', 53.2594, -113.5490),

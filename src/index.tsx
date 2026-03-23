@@ -6,9 +6,12 @@ import { employeeRoutes } from './routes/employee'
 import { scaleTicketRoutes } from './routes/scaleTickets'
 import { pickupRoutes } from './routes/pickups'
 import { routeRoutes } from './routes/routing'
+import { squareRoutes } from './routes/square'
+import { pricingRoutes } from './routes/pricing'
 import { renderLogin } from './pages/login'
 import { renderCustomerDashboard } from './pages/customerDashboard'
 import { renderEmployeeDashboard } from './pages/employeeDashboard'
+import { renderScaleHouse } from './pages/scaleHouse'
 import { renderScaleTickets } from './pages/scaleTickets'
 import { renderPickupManagement } from './pages/pickupManagement'
 import { renderRouting } from './pages/routing'
@@ -16,6 +19,9 @@ import { renderFieldForm } from './pages/fieldForm'
 
 type Bindings = {
   DB: D1Database
+  GOOGLE_MAPS_API_KEY: string
+  SQUARE_APP_ID: string
+  SQUARE_ACCESS_TOKEN: string
 }
 
 const app = new Hono<{ Bindings: Bindings }>()
@@ -30,6 +36,13 @@ app.route('/api/employee', employeeRoutes)
 app.route('/api/scale-tickets', scaleTicketRoutes)
 app.route('/api/pickups', pickupRoutes)
 app.route('/api/routes', routeRoutes)
+app.route('/api/square', squareRoutes)
+app.route('/api/pricing', pricingRoutes)
+
+// ── Config endpoint (serves safe public keys) ──
+app.get('/api/config/maps-key', (c) => {
+  return c.json({ key: c.env.GOOGLE_MAPS_API_KEY || '' })
+})
 
 // ── Page Routes ────────────────────────────
 
@@ -43,6 +56,7 @@ app.get('/customer/pickups', (c) => c.html(renderCustomerDashboard()))
 
 // Employee Pages
 app.get('/employee/dashboard', (c) => c.html(renderEmployeeDashboard()))
+app.get('/employee/scale-house', (c) => c.html(renderScaleHouse()))
 app.get('/employee/scale-tickets', (c) => c.html(renderScaleTickets()))
 app.get('/employee/scale-tickets/new', (c) => c.html(renderScaleTickets()))
 app.get('/employee/pickups', (c) => c.html(renderPickupManagement()))

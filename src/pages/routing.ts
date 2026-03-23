@@ -53,16 +53,8 @@ export function renderRouting(): string {
             </h3>
             <div id="route-info" class="text-sm text-gray-500"></div>
           </div>
-          <!-- Map placeholder - will use Google Maps -->
-          <div id="map-container" class="h-[400px] bg-gray-100 relative">
-            <div class="absolute inset-0 flex items-center justify-center text-gray-400">
-              <div class="text-center">
-                <i class="fas fa-map text-5xl mb-3"></i>
-                <p class="text-sm">Select a route to view on map</p>
-                <p class="text-xs mt-1 text-gray-300">Google Maps integration ready</p>
-              </div>
-            </div>
-          </div>
+          <!-- Google Maps -->
+          <div id="map-container" class="h-[400px] bg-gray-100 relative"></div>
         </div>
 
         <!-- Route Stops Detail -->
@@ -292,19 +284,8 @@ export function renderRouting(): string {
             \`;
           }
 
-          // Update map placeholder with route info
-          const mapDiv = document.getElementById('map-container');
-          mapDiv.innerHTML = \`
-            <div class="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-50 to-green-50">
-              <div class="text-center">
-                <i class="fas fa-map-marked-alt text-5xl text-blue-400 mb-3"></i>
-                <p class="font-semibold text-gray-700">\${route.name}</p>
-                <p class="text-sm text-gray-500">\${stops.length} stops | Driver: \${route.driver_name || 'N/A'}</p>
-                <p class="text-xs text-gray-400 mt-2">Google Maps API integration point</p>
-                <p class="text-xs text-blue-500 mt-1">Provide your Google Maps API key to enable live maps</p>
-              </div>
-            </div>
-          \`;
+          // Render Google Map with stops
+          renderRouteOnMap(route, stops);
         } catch (err) {
           console.error('Failed to load route details:', err);
         }
@@ -356,6 +337,117 @@ export function renderRouting(): string {
         }
       }
 
+      // ═══ GOOGLE MAPS ═══
+      let gmap = null;
+      let gMarkers = [];
+      let gDirectionsRenderer = null;
+      let gmapsLoaded = false;
+
+      async function initGoogleMaps() {
+        if (gmapsLoaded) return;
+        try {
+          const res = await axios.get('/api/config/maps-key');
+          const key = res.data.key;
+          if (!key) return;
+          const script = document.createElement('script');
+          script.src = 'https://maps.googleapis.com/maps/api/js?key=' + key + '&libraries=places,geometry&callback=onGMapsReady';
+          script.async = true;
+          script.defer = true;
+          document.head.appendChild(script);
+        } catch(e) { console.error('Maps key fetch failed:', e); }
+      }
+
+      window.onGMapsReady = function() {
+        gmapsLoaded = true;
+        const mapEl = document.getElementById('map-container');
+        gmap = new google.maps.Map(mapEl, {
+          center: { lat: 53.5461, lng: -113.4938 }, // Edmonton
+          zoom: 11,
+          mapTypeControl: false,
+          streetViewControl: false,
+          styles: [
+            { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+          ]
+        });
+        gDirectionsRenderer = new google.maps.DirectionsRenderer({
+          map: gmap,
+          suppressMarkers: true,
+          polylineOptions: { strokeColor: '#1B5E20', strokeWeight: 4, strokeOpacity: 0.8 }
+        });
+      };
+
+      function renderRouteOnMap(route, stops) {
+        if (!gmapsLoaded || !gmap) {
+          document.getElementById('map-container').innerHTML = '<div class="flex items-center justify-center h-full bg-blue-50 text-gray-500"><div class="text-center"><i class="fas fa-map-marked-alt text-4xl mb-2 text-blue-400"></i><p class="font-semibold">' + route.name + '</p><p class="text-xs">' + stops.length + ' stops</p><p class="text-xs text-blue-500 mt-2">Map loading...</p></div></div>';
+          return;
+        }
+        // Clear existing
+        gMarkers.forEach(m => m.setMap(null));
+        gMarkers = [];
+
+        const reuseHQ = { lat: 53.5461, lng: -113.4938 }; // Reuse Canada yard
+        const bounds = new google.maps.LatLngBounds();
+        bounds.extend(reuseHQ);
+
+        // HQ marker
+        const hqMarker = new google.maps.Marker({
+          position: reuseHQ, map: gmap,
+          icon: { path: google.maps.SymbolPath.CIRCLE, scale: 12, fillColor: '#1B5E20', fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 },
+          title: 'Reuse Canada Yard', zIndex: 100
+        });
+        gMarkers.push(hqMarker);
+
+        // Stop markers
+        const waypoints = [];
+        stops.forEach((s, i) => {
+          if (s.lat && s.lng) {
+            const pos = { lat: s.lat, lng: s.lng };
+            bounds.extend(pos);
+            waypoints.push({ location: pos, stopover: true });
+            const marker = new google.maps.Marker({
+              position: pos, map: gmap,
+              label: { text: String(i+1), color: '#fff', fontWeight: 'bold', fontSize: '11px' },
+              icon: { path: google.maps.SymbolPath.CIRCLE, scale: 14,
+                fillColor: s.status === 'completed' ? '#16a34a' : s.status === 'arrived' ? '#ea580c' : '#4f46e5',
+                fillOpacity: 1, strokeColor: '#fff', strokeWeight: 2 },
+              title: s.company_name || 'Stop ' + (i+1)
+            });
+            const infoWin = new google.maps.InfoWindow({
+              content: '<div style="font-family:Inter,sans-serif;"><b>' + (s.company_name || 'Stop '+(i+1)) + '</b><br><span style="font-size:12px;color:#666;">' + (s.address || '') + '<br>' + (s.estimated_tire_count || '?') + ' est. tires</span></div>'
+            });
+            marker.addListener('click', () => infoWin.open(gmap, marker));
+            gMarkers.push(marker);
+          }
+        });
+
+        // Draw route via Directions API
+        if (waypoints.length > 0) {
+          const directionsService = new google.maps.DirectionsService();
+          directionsService.route({
+            origin: reuseHQ,
+            destination: reuseHQ,
+            waypoints: waypoints,
+            optimizeWaypoints: false,
+            travelMode: google.maps.TravelMode.DRIVING
+          }, (result, status) => {
+            if (status === 'OK') {
+              gDirectionsRenderer.setDirections(result);
+              const leg = result.routes[0].legs;
+              let totalDist = 0, totalTime = 0;
+              leg.forEach(l => { totalDist += l.distance.value; totalTime += l.duration.value; });
+              document.getElementById('route-info').innerHTML = 
+                '<span class="font-semibold">' + route.name + '</span> | ' +
+                (totalDist/1000).toFixed(1) + ' km | ' +
+                Math.round(totalTime/60) + ' min drive';
+            }
+          });
+        }
+
+        gmap.fitBounds(bounds, 50);
+      }
+
+      // Init
+      initGoogleMaps();
       loadRoutes();
     </script>
   `))

@@ -57,11 +57,17 @@ export function renderEmployeeDashboard(): string {
         <div class="p-5 border-b border-gray-100 flex items-center justify-between">
           <h2 class="font-bold text-gray-800 flex items-center gap-2">
             <i class="fas fa-truck-pickup text-rc-green"></i> Recent Pickup Requests
+            <span id="pickups-badge" class="hidden bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-0.5 rounded-full animate-pulse"></span>
           </h2>
-          <a href="/employee/pickups" class="text-sm text-rc-green hover:text-rc-green-light font-medium">View All <i class="fas fa-arrow-right ml-1"></i></a>
+          <div class="flex items-center gap-3">
+            <button onclick="loadDashboard()" class="text-sm text-gray-400 hover:text-rc-green" title="Refresh">
+              <i class="fas fa-sync-alt"></i>
+            </button>
+            <a href="/employee/pickups" class="text-sm text-rc-green hover:text-rc-green-light font-medium">View All <i class="fas fa-arrow-right ml-1"></i></a>
+          </div>
         </div>
         <div class="divide-y divide-gray-50" id="recent-pickups">
-          <div class="p-6 text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</div>
+          <div class="p-6 text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading pickup requests...</div>
         </div>
       </div>
 
@@ -116,40 +122,60 @@ export function renderEmployeeDashboard(): string {
 
     <script>
       async function loadDashboard() {
+        console.log('[Dashboard] Loading dashboard data...');
+        const pickupsDiv = document.getElementById('recent-pickups');
+        const ticketsDiv = document.getElementById('recent-tickets');
+        
         try {
           const res = await axios.get('/api/employee/dashboard');
+          console.log('[Dashboard] API response received:', JSON.stringify(res.data).substring(0, 200));
           const d = res.data;
+          
+          // Update stats
           document.getElementById('stat-pending').textContent = d.pending_pickups || 0;
           document.getElementById('stat-routes').textContent = d.todays_routes || 0;
           document.getElementById('stat-tickets').textContent = d.open_tickets || 0;
           document.getElementById('stat-completed').textContent = d.completed_today || 0;
 
+          // Show pending badge
+          const badge = document.getElementById('pickups-badge');
+          if (d.pending_pickups > 0) {
+            badge.textContent = d.pending_pickups + ' pending';
+            badge.classList.remove('hidden');
+          }
+
           // Recent pickups
-          const pickupsDiv = document.getElementById('recent-pickups');
+          console.log('[Dashboard] Recent pickups count:', d.recent_pickups ? d.recent_pickups.length : 0);
           if (d.recent_pickups && d.recent_pickups.length > 0) {
             pickupsDiv.innerHTML = d.recent_pickups.map(p => \`
-              <div class="px-5 py-4 flex items-center justify-between hover:bg-gray-50">
-                <div>
-                  <div class="font-semibold text-sm text-gray-800">\${p.company_name}</div>
-                  <div class="text-xs text-gray-500">\${p.estimated_tire_count} tires - \${p.preferred_date || 'No date'}</div>
+              <a href="/employee/pickups" class="px-5 py-4 flex items-center justify-between hover:bg-green-50 cursor-pointer transition-colors block">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 \${p.status === 'pending' ? 'bg-yellow-100' : 'bg-gray-100'}">
+                    <i class="fas fa-\${p.status === 'pending' ? 'clock text-yellow-600' : 'truck-pickup text-gray-500'} text-xs"></i>
+                  </div>
+                  <div>
+                    <div class="font-semibold text-sm text-gray-800">\${p.company_name || 'Unknown'}</div>
+                    <div class="text-xs text-gray-500">\${p.estimated_tire_count} \${p.tire_type || ''} tires \${p.preferred_date ? '- ' + p.preferred_date : ''}</div>
+                  </div>
                 </div>
                 <span class="px-2.5 py-1 rounded-full text-xs font-semibold \${getStatusClass(p.status)}">
                   \${p.status.replace('_',' ').toUpperCase()}
                 </span>
-              </div>
+              </a>
             \`).join('');
+            console.log('[Dashboard] Rendered', d.recent_pickups.length, 'pickup items');
           } else {
-            pickupsDiv.innerHTML = '<div class="p-6 text-center text-gray-400">No recent pickup requests</div>';
+            pickupsDiv.innerHTML = '<div class="p-6 text-center text-gray-400"><i class="fas fa-inbox text-2xl mb-2 block"></i>No recent pickup requests</div>';
           }
 
           // Recent tickets
-          const ticketsDiv = document.getElementById('recent-tickets');
+          console.log('[Dashboard] Recent tickets count:', d.recent_tickets ? d.recent_tickets.length : 0);
           if (d.recent_tickets && d.recent_tickets.length > 0) {
             ticketsDiv.innerHTML = d.recent_tickets.map(t => \`
               <div class="px-5 py-4 flex items-center justify-between hover:bg-gray-50">
                 <div>
                   <div class="font-semibold text-sm text-gray-800">\${t.ticket_number}</div>
-                  <div class="text-xs text-gray-500">\${t.field_store_name || 'N/A'} - \${t.net_weight ? t.net_weight + ' kg' : 'Pending weigh'}</div>
+                  <div class="text-xs text-gray-500">\${t.field_store_name || t.company_name || 'N/A'} - \${t.net_weight ? t.net_weight + ' kg' : 'Pending weigh'}</div>
                 </div>
                 <span class="px-2.5 py-1 rounded-full text-xs font-semibold \${getTicketStatusClass(t.status)}">
                   \${t.status.replace('_',' ').toUpperCase()}
@@ -157,10 +183,15 @@ export function renderEmployeeDashboard(): string {
               </div>
             \`).join('');
           } else {
-            ticketsDiv.innerHTML = '<div class="p-6 text-center text-gray-400">No recent scale tickets</div>';
+            ticketsDiv.innerHTML = '<div class="p-6 text-center text-gray-400"><i class="fas fa-inbox text-2xl mb-2 block"></i>No recent scale tickets</div>';
           }
         } catch (err) {
-          console.error('Dashboard load error:', err);
+          console.error('[Dashboard] Load error:', err);
+          console.error('[Dashboard] Error details:', err.response?.status, err.response?.data);
+          // Show error in UI instead of silent fail
+          if (pickupsDiv) {
+            pickupsDiv.innerHTML = '<div class="p-6 text-center text-red-400"><i class="fas fa-exclamation-triangle text-2xl mb-2 block"></i>Failed to load pickups. <button onclick="loadDashboard()" class="text-rc-green underline ml-1">Retry</button></div>';
+          }
         }
       }
 
@@ -189,7 +220,16 @@ export function renderEmployeeDashboard(): string {
         return map[status] || 'bg-gray-100 text-gray-800';
       }
 
-      loadDashboard();
+      // Safely call loadDashboard — retry if axios isn't ready
+      (function initDashboard() {
+        if (typeof axios !== 'undefined') {
+          console.log('[Dashboard] Axios ready, calling loadDashboard()');
+          loadDashboard();
+        } else {
+          console.warn('[Dashboard] Axios not yet available, retrying in 500ms...');
+          setTimeout(initDashboard, 500);
+        }
+      })();
     </script>
   `))
 }

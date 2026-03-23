@@ -109,6 +109,44 @@ export function employeeSidebar(activePage: string): string {
 export function employeePageWrapper(activePage: string, pageTitle: string, content: string): string {
   return `
   ${employeeSidebar(activePage)}
+
+  <!-- Auth & Axios interceptor — MUST run before any page scripts that call APIs -->
+  <script>
+    // Auth check
+    const session = JSON.parse(localStorage.getItem('rc_session') || '{}');
+    if (!session.token || session.user_type !== 'employee') {
+      window.location.href = '/login';
+    }
+
+    // Axios auth interceptor — adds Bearer token to every request
+    // Safety check in case CDN hasn't loaded yet
+    function setupAxiosInterceptors() {
+      if (typeof axios === 'undefined') {
+        console.warn('[RC-Auth] Axios not loaded yet, retrying in 200ms...');
+        setTimeout(setupAxiosInterceptors, 200);
+        return;
+      }
+      console.log('[RC-Auth] Setting up Axios interceptors with auth token');
+      axios.interceptors.request.use(config => {
+        const s = JSON.parse(localStorage.getItem('rc_session') || '{}');
+        if (s.token) config.headers.Authorization = 'Bearer ' + s.token;
+        return config;
+      });
+      axios.interceptors.response.use(r => r, err => {
+        if (err.response?.status === 401) {
+          localStorage.removeItem('rc_session');
+          window.location.href = '/login';
+        }
+        return Promise.reject(err);
+      });
+    }
+    setupAxiosInterceptors();
+
+    function handleLogout() {
+      localStorage.removeItem('rc_session');
+      window.location.href = '/login';
+    }
+  </script>
   
   <!-- Main Content -->
   <main class="lg:ml-64 min-h-screen pt-14 lg:pt-0">
@@ -130,11 +168,6 @@ export function employeePageWrapper(activePage: string, pageTitle: string, conte
   </main>
 
   <script>
-    // Auth check
-    const session = JSON.parse(localStorage.getItem('rc_session') || '{}');
-    if (!session.token || session.user_type !== 'employee') {
-      window.location.href = '/login';
-    }
     // Set user info in sidebar
     document.getElementById('sidebar-user-name').textContent = session.name || 'Employee';
     document.getElementById('sidebar-user-role').textContent = (session.role || 'staff').replace('_', ' ').toUpperCase();
@@ -148,25 +181,6 @@ export function employeePageWrapper(activePage: string, pageTitle: string, conte
     }
     updateDateTime();
     setInterval(updateDateTime, 60000);
-
-    function handleLogout() {
-      localStorage.removeItem('rc_session');
-      window.location.href = '/login';
-    }
-
-    // Axios auth interceptor
-    axios.interceptors.request.use(config => {
-      const s = JSON.parse(localStorage.getItem('rc_session') || '{}');
-      if (s.token) config.headers.Authorization = 'Bearer ' + s.token;
-      return config;
-    });
-    axios.interceptors.response.use(r => r, err => {
-      if (err.response?.status === 401) {
-        localStorage.removeItem('rc_session');
-        window.location.href = '/login';
-      }
-      return Promise.reject(err);
-    });
   </script>
   `
 }

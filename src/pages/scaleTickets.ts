@@ -334,7 +334,10 @@ export function renderScaleTickets(): string {
         document.getElementById('detail-modal').style.display = 'none';
       }
 
-      loadTickets();
+      (function initTicketsPage() {
+        if (typeof axios !== 'undefined') { loadTickets(); }
+        else { setTimeout(initTicketsPage, 500); }
+      })();
     </script>
   `))
 }

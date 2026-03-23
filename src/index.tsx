@@ -44,6 +44,19 @@ app.get('/api/config/maps-key', (c) => {
   return c.json({ key: c.env.GOOGLE_MAPS_API_KEY || '' })
 })
 
+// ── No-cache middleware for all page routes ──
+// Prevents browser from caching stale HTML pages
+app.use('*', async (c, next) => {
+  await next()
+  // Only apply no-cache to HTML pages (not API routes)
+  const ct = c.res.headers.get('content-type') || ''
+  if (ct.includes('text/html')) {
+    c.res.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+    c.res.headers.set('Pragma', 'no-cache')
+    c.res.headers.set('Expires', '0')
+  }
+})
+
 // ── Page Routes ────────────────────────────
 
 // Landing / Login

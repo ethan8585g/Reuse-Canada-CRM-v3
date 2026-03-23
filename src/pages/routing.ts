@@ -479,9 +479,16 @@ export function renderRouting(): string {
         gmap.fitBounds(bounds, 50);
       }
 
-      // Init
-      initGoogleMaps();
-      loadRoutes();
+      // Init - safely wait for Axios
+      (function initRoutingPage() {
+        if (typeof axios !== 'undefined') {
+          initGoogleMaps();
+          loadRoutes();
+        } else {
+          console.warn('[Routing] Axios not loaded yet, retrying...');
+          setTimeout(initRoutingPage, 500);
+        }
+      })();
     </script>
   `))
 }

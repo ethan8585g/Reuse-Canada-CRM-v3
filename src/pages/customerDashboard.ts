@@ -179,16 +179,24 @@ export function renderCustomerDashboard(): string {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('pickup-date').min = today;
 
-    // Axios auth
-    axios.interceptors.request.use(config => {
-      const s = JSON.parse(localStorage.getItem('rc_session') || '{}');
-      if (s.token) config.headers.Authorization = 'Bearer ' + s.token;
-      return config;
-    });
-    axios.interceptors.response.use(r => r, err => {
-      if (err.response?.status === 401) { localStorage.removeItem('rc_session'); window.location.href = '/login'; }
-      return Promise.reject(err);
-    });
+    // Axios auth - with safety check
+    function setupCustomerAxios() {
+      if (typeof axios === 'undefined') {
+        console.warn('[RC-Customer] Axios not loaded yet, retrying...');
+        setTimeout(setupCustomerAxios, 200);
+        return;
+      }
+      axios.interceptors.request.use(config => {
+        const s = JSON.parse(localStorage.getItem('rc_session') || '{}');
+        if (s.token) config.headers.Authorization = 'Bearer ' + s.token;
+        return config;
+      });
+      axios.interceptors.response.use(r => r, err => {
+        if (err.response?.status === 401) { localStorage.removeItem('rc_session'); window.location.href = '/login'; }
+        return Promise.reject(err);
+      });
+    }
+    setupCustomerAxios();
 
     function handleLogout() {
       localStorage.removeItem('rc_session');
@@ -269,7 +277,14 @@ export function renderCustomerDashboard(): string {
       }
     }
 
-    loadPickups();
+    // Safely call loadPickups — retry if axios isn't ready
+    (function initCustomerDash() {
+      if (typeof axios !== 'undefined') {
+        loadPickups();
+      } else {
+        setTimeout(initCustomerDash, 500);
+      }
+    })();
   </script>
   `)
 }

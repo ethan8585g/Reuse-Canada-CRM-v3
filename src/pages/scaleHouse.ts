@@ -1011,8 +1011,10 @@ export function renderScaleHouse(): string {
   // ══════════════════════════════════════════
   // INIT
   // ══════════════════════════════════════════
-  loadQueue();
-  loadPricing();
+  (function initScaleHouse() {
+    if (typeof axios !== 'undefined') { loadQueue(); loadPricing(); }
+    else { setTimeout(initScaleHouse, 500); }
+  })();
   </script>
   `))
 }

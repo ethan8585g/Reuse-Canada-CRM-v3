@@ -211,7 +211,14 @@ export function renderPickupManagement(): string {
         window.location.href = '/employee/field-form?pickup_id=' + pickupId;
       }
 
-      loadPickups();
+      // Safely call loadPickups — retry if axios isn't ready
+      (function initPickups() {
+        if (typeof axios !== 'undefined') {
+          loadPickups();
+        } else {
+          setTimeout(initPickups, 500);
+        }
+      })();
     </script>
   `))
 }

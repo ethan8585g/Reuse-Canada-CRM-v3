@@ -1,154 +1,166 @@
-# Reuse Canada CRM & Operations Platform
+# Reuse Canada — CRM & Operations Platform
 
 ## Project Overview
 - **Name**: Reuse Canada CRM
-- **Goal**: Enterprise-grade operations platform for managing tire pickups, digital scale ticketing, route planning, and customer relationship management
-- **Platform**: Cloudflare Pages + Hono Framework + D1 Database
-- **Company**: Reuse Canada - Alberta's Waste-to-Value Recycling Enterprise
+- **Goal**: Unified platform for managing tire pickup logistics, digital scale ticketing, customer relationships, and route planning
+- **Tech Stack**: Hono + TypeScript + TailwindCSS + Cloudflare Workers (D1 SQLite)
 
-## Completed Features
+## Live URL
+- **Sandbox**: https://3000-i7wpnsz9uva6yhriboyev-82b888ba.sandbox.novita.ai
 
-### Dual Login System
-- **Customer Portal**: Separate login for tire generators (stores, shops, dealerships)
-- **Employee Portal**: Secure login for Reuse Canada staff (admin, drivers, yard operators)
-- Session-based authentication with 24-hour token expiry
+## Login Credentials
 
 ### Customer Portal
-- Submit tire pickup requests (tire count, type, preferred date/time, notes)
-- View all pickup request history with status tracking
-- Real-time stats (pending, scheduled, completed, total tires)
+| Username | Password | Company |
+|----------|----------|---------|
+| KALTIRE | TIRES! | Kal Tire - Edmonton South |
 
-### Employee Dashboard
-- Overview stats: pending pickups, today's routes, open tickets, completed today
-- Recent pickup requests feed
-- Recent scale tickets feed
-- Quick action buttons for all modules
-
-### Digital Scale Ticketing (Accuren Apex Indicator Integration)
-- Create tickets from office or from field (iPad)
-- Full weight workflow: Weight In (Gross) -> Weight Out (Tare) -> Net Weight calculated
-- Ticket numbering system: RC-YYYY-NNNNN
-- Status flow: field_pending -> field_complete -> weighed_in -> completed
-- Void ticket capability
-- Filter by status and date
-
-### Tire Pickup Management
-- View/filter all customer pickup requests
-- Assign pickups to drivers with scheduled dates
-- Status management: pending -> confirmed -> scheduled -> in_progress -> completed
-- Rich pickup cards with customer details, tire info, notes
-- Direct link to field form for on-site data collection
-
-### Route Planning & Management
-- Create routes with driver assignment and vehicle selection
-- Add multiple pickup stops to routes
-- Visual route stop timeline (start at yard -> stops -> return to yard)
-- Route status tracking (planned, in_progress, completed)
-- Unassigned pickups sidebar for easy route building
-- Google Maps API integration point ready
-
-### Field Form (iPad Optimized)
-- **Step 1**: Photo capture of tire cage at customer site (camera/gallery)
-- **Step 2**: Customer form (store name, employee name, estimated tire count)
-- **Step 3**: Digital signature capture with touch-enabled canvas
-- **Step 4**: Review & submit - creates scale ticket with all field data
-- Progress indicator with 4-step visual flow
-- Auto-creates scale ticket linked to pickup request
-- Pre-fills customer info when coming from pickup management
-
-## Test Credentials
-
-### Customer Login
-| Email | Password | Company |
-|-------|----------|---------|
-| info@kaltireauto.ca | customer123 | Kal Tire - Edmonton South |
-| manager@canadiantire362.ca | customer123 | Canadian Tire #362 |
-| ops@fountaintire.ca | customer123 | Fountain Tire - Sherwood Park |
-| contact@ok-tire-leduc.ca | customer123 | OK Tire - Leduc |
-| shop@quicklane-west.ca | customer123 | Quick Lane - West Edmonton |
-
-### Employee Login
+### Employee Portal
 | Email | Password | Role |
 |-------|----------|------|
+| Ethan@reuse-canada.ca | Tires123! | Admin |
 | admin@reusecanada.ca | admin123 | Admin |
 | mike@reusecanada.ca | driver123 | Driver |
 | sarah@reusecanada.ca | driver123 | Driver |
 | james@reusecanada.ca | yard123 | Yard Operator |
 
+## Completed Features
+
+### 1. Dual Login System (`/`)
+- Customer Portal (green) — username-based login
+- Employee Portal (dark gray) — email-based login
+- Session management with token auth
+- Auto-redirect if already logged in
+
+### 2. Scale House (`/employee/scale-house`) ⭐ NEW
+Full-featured scale house ticketing station:
+- **Bluetooth Accuren Apex Integration**: Web Bluetooth API connects to the Apex indicator via BLE. Live weight display with STABLE indicator. Supports auto-detect of BLE services.
+- **3-Step Workflow**: Create Ticket → Capture Weight In (Gross) → Capture Weight Out (Tare) → Auto-calculate Net Weight
+- **Auto Pricing**: Pulls rates from pricing table by material type. Calculates subtotal + 5% GST automatically.
+- **Square Terminal Payment**: Sends $ amount to Square Reader for card tap/insert. Polls for payment completion. Cash payment option available.
+- **Receipt Printing**: 80mm thermal receipt layout. Full ticket details with REUSE CANADA branding. Uses browser print dialog for any attached printer.
+- **Ticket Queue**: Shows all active/pending tickets in sidebar. Click to load and continue working on any ticket.
+- **Simulation Mode**: "Sim" button for testing without physical scale hardware.
+
+### 3. Scale Ticket History (`/employee/scale-tickets`)
+- Full ticket list with search/filter by status and date
+- Ticket detail modal with all field data and weight history
+- Weigh-in and weigh-out actions from the table
+- Void ticket functionality
+
+### 4. Customer Dashboard (`/customer/dashboard`)
+- Submit tire pickup requests (count, type, date, notes)
+- View request status and history
+- Company profile display
+
+### 5. Employee Dashboard (`/employee/dashboard`)
+- Live stats: Pending Pickups, Today's Routes, Open Tickets, Completed Today
+- Recent pickup requests and scale tickets
+- Quick action cards linking to all modules
+
+### 6. Pickup Management (`/employee/pickups`)
+- Pickup request cards with full details
+- Driver assignment and scheduling
+- Status lifecycle: pending → confirmed → scheduled → in_progress → completed
+
+### 7. Route Planning (`/employee/routing`)
+- Create routes with driver/vehicle assignment
+- Add pickup stops to routes
+- **Google Maps Integration**: Live route visualization with markers, directions, and distance/time calculation
+- Route stops timeline (Yard → Stops → Return)
+
+### 8. iPad Field Form (`/employee/field-form`)
+- 4-step touch-optimized workflow
+- Step 1: Tire cage photo capture
+- Step 2: Store name, employee name, tire count
+- Step 3: Digital signature pad
+- Step 4: Review & submit (auto-creates scale ticket)
+
 ## API Endpoints
 
-### Authentication
-- `POST /api/auth/login` - Login (customer or employee)
-- `POST /api/auth/logout` - Logout
-- `GET /api/auth/verify` - Verify session
-
-### Customer APIs
-- `GET /api/customer/pickups` - List customer's pickups
-- `POST /api/customer/pickups` - Submit pickup request
-
-### Employee APIs
-- `GET /api/employee/dashboard` - Dashboard stats
-- `GET /api/employee/customers` - List all customers
-- `GET /api/employee/drivers` - List all drivers
-- `GET /api/employee/vehicles` - List all vehicles
+### Auth
+- `POST /api/auth/login` — Login (customer or employee)
+- `POST /api/auth/logout` — Logout
+- `GET /api/auth/verify` — Verify session
 
 ### Scale Tickets
-- `GET /api/scale-tickets` - List tickets (filter: status, date)
-- `GET /api/scale-tickets/:id` - Ticket detail
-- `POST /api/scale-tickets` - Create ticket (office)
-- `POST /api/scale-tickets/field` - Create ticket from field form
-- `POST /api/scale-tickets/:id/weight` - Record weight (in/out)
-- `POST /api/scale-tickets/:id/void` - Void ticket
+- `GET /api/scale-tickets` — List (filterable by status, date)
+- `GET /api/scale-tickets/:id` — Detail
+- `POST /api/scale-tickets` — Create ticket
+- `POST /api/scale-tickets/field` — Create from iPad field form
+- `POST /api/scale-tickets/:id/weight` — Record weight (in/out)
+- `POST /api/scale-tickets/:id/finalize` — Save pricing
+- `POST /api/scale-tickets/:id/payment` — Update payment status
+- `POST /api/scale-tickets/:id/void` — Void ticket
 
-### Pickup Management
-- `GET /api/pickups` - List pickups (filter: status, date)
-- `GET /api/pickups/:id` - Pickup detail
-- `POST /api/pickups/:id/status` - Update status
-- `POST /api/pickups/:id/assign` - Assign to driver
+### Square Payments
+- `POST /api/square/terminal-checkout` — Send to Square Reader
+- `GET /api/square/terminal-checkout/:id` — Check payment status
+- `POST /api/square/terminal-checkout/:id/cancel` — Cancel checkout
+- `POST /api/square/payment` — Direct payment
+- `GET /api/square/devices` — List Square terminals
+- `POST /api/square/cash-payment` — Record cash payment
 
-### Routing
-- `GET /api/routes` - List routes (filter: date, employee)
-- `GET /api/routes/:id` - Route with stops
-- `POST /api/routes` - Create route with stops
-- `POST /api/routes/:id/status` - Update route status
+### Pricing
+- `GET /api/pricing` — Get all pricing rates
+- `POST /api/pricing/:id` — Update pricing
+
+### Pickups & Routes
+- `GET /api/pickups` — List pickup requests
+- `POST /api/pickups` — Create pickup request
+- `GET /api/routes` — List routes
+- `POST /api/routes` — Create route
 
 ## Data Architecture
-- **Database**: Cloudflare D1 (SQLite)
-- **Tables**: customers, employees, sessions, pickup_requests, routes, route_stops, scale_tickets, vehicles
-- **Storage**: Scale ticket photos & signatures stored as base64 in D1
 
-## Scale Ticket Workflow
-1. Driver arrives at customer site
-2. Photos tire cage using iPad camera
-3. Customer fills form (store name, employee name, est. tires)
-4. Customer signs on iPad
-5. Field form submitted -> Scale ticket created (status: field_complete)
-6. Driver returns to Reuse Canada yard
-7. Truck weighed on Accuren Apex indicator -> Weight In recorded (gross)
-8. Tires unloaded
-9. Empty truck weighed -> Weight Out recorded (tare)
-10. Net weight auto-calculated -> Ticket completed
+### Database: Cloudflare D1 (SQLite)
+- **customers** — Company info, contacts, addresses, coordinates
+- **employees** — Staff with roles (admin, driver, yard_operator)
+- **sessions** — Auth tokens with expiry
+- **pickup_requests** — Tire pickup requests with lifecycle status
+- **routes** — Route plans with driver/vehicle assignment
+- **route_stops** — Individual stops within routes
+- **scale_tickets** — Core ticket with field data, weights, pricing, payments
+- **vehicles** — Fleet with tare weights
+- **pricing** — Material-type pricing table (per-kg rates)
+- **payment_log** — Payment audit trail
 
-## Tech Stack
-- **Backend**: Hono Framework (TypeScript)
-- **Frontend**: TailwindCSS (CDN) + FontAwesome + Axios
-- **Database**: Cloudflare D1 (SQLite)
-- **Runtime**: Cloudflare Workers
-- **Build**: Vite
-- **Process Manager**: PM2
+### Pricing Table (Default Rates)
+| Material | Price/kg | Price/tire |
+|----------|----------|------------|
+| Passenger Tires | $0.15 | $4.00 |
+| Truck Tires | $0.12 | $15.00 |
+| Mixed Tires | $0.14 | $5.00 |
+| Off-Road Tires | $0.10 | $25.00 |
+| Shingles | $0.08 | — |
+| Scrap Metal | $0.45 | — |
+
+## Hardware Integration
+
+### Accuren Apex Indicator (Bluetooth)
+- Connects via Web Bluetooth API in Chrome/Edge
+- Scans for BLE weight scale services
+- Reads live weight data from the indicator
+- Displays stable/unstable indicator
+
+### Square Terminal Reader
+- Sends payment amounts via Square Terminal API
+- Polls for card tap/insert completion
+- Records payment IDs and status in our database
+
+### Receipt Printer
+- Uses browser's native print dialog
+- Formatted for 80mm thermal receipt paper
+- Prints full scale ticket with weights, pricing, company info
+
+## Environment Variables (.dev.vars)
+```
+GOOGLE_MAPS_API_KEY=<configured>
+SQUARE_APP_ID=<configured>
+SQUARE_ACCESS_TOKEN=<configured>
+```
 
 ## Deployment
-- **Platform**: Cloudflare Pages
-- **Status**: Development / Ready for deployment
+- **Platform**: Cloudflare Pages (Workers + D1)
+- **Status**: ✅ Running in sandbox
 - **Last Updated**: 2026-03-23
-
-## Next Steps
-- [ ] Google Maps API integration for live route mapping
-- [ ] Accuren Apex scale indicator direct data feed integration
-- [ ] Email/SMS notifications for pickup confirmations
-- [ ] Customer registration workflow
-- [ ] PDF scale ticket export/print
-- [ ] Analytics dashboard with charts
-- [ ] Role-based access control refinement
-- [ ] Password hashing (bcrypt) for production
-- [ ] R2 storage for photos (replace base64)

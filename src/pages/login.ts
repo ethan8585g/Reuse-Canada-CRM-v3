@@ -1,0 +1,199 @@
+import { layout } from '../utils/layout'
+
+export function renderLogin(): string {
+  return layout('Login', `
+  <div class="min-h-screen rc-gradient flex items-center justify-center p-4">
+    <!-- Background pattern -->
+    <div class="absolute inset-0 opacity-10">
+      <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23ffffff&quot; fill-opacity=&quot;0.3&quot;%3E%3Cpath d=&quot;M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
+    </div>
+    
+    <div class="relative z-10 w-full max-w-5xl">
+      <!-- Logo & Header -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-lg mb-4">
+          <i class="fas fa-recycle text-4xl text-rc-green"></i>
+        </div>
+        <h1 class="text-4xl font-bold text-white mb-2">REUSE CANADA</h1>
+        <p class="text-green-100 text-lg">Operations & CRM Platform</p>
+      </div>
+      
+      <!-- Login Cards -->
+      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+        
+        <!-- Customer Login -->
+        <div class="glass rounded-2xl shadow-2xl overflow-hidden card-hover">
+          <div class="bg-rc-green p-6 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-3">
+              <i class="fas fa-store text-3xl text-white"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-white">Customer Portal</h2>
+            <p class="text-green-100 text-sm mt-1">Request tire pickups & track status</p>
+          </div>
+          <div class="p-8">
+            <div id="customer-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
+            <form id="customer-login-form" onsubmit="handleCustomerLogin(event)">
+              <div class="mb-5">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <i class="fas fa-envelope mr-1 text-rc-green"></i> Email Address
+                </label>
+                <input type="email" id="customer-email" required
+                  class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rc-green focus:ring-2 focus:ring-green-100 transition-all outline-none"
+                  placeholder="your@company.ca">
+              </div>
+              <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <i class="fas fa-lock mr-1 text-rc-green"></i> Password
+                </label>
+                <div class="relative">
+                  <input type="password" id="customer-password" required
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rc-green focus:ring-2 focus:ring-green-100 transition-all outline-none"
+                    placeholder="Enter your password">
+                  <button type="button" onclick="togglePassword('customer-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+              <button type="submit" id="customer-login-btn"
+                class="w-full bg-rc-green hover:bg-rc-green-light text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                <i class="fas fa-sign-in-alt"></i>
+                Sign In to Customer Portal
+              </button>
+            </form>
+            <div class="mt-4 text-center">
+              <a href="#" onclick="showRegister('customer')" class="text-rc-green hover:text-rc-green-light text-sm font-medium">
+                <i class="fas fa-user-plus mr-1"></i> New customer? Request access
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Employee Login -->
+        <div class="glass rounded-2xl shadow-2xl overflow-hidden card-hover">
+          <div class="bg-rc-gray p-6 text-center">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-3">
+              <i class="fas fa-hard-hat text-3xl text-white"></i>
+            </div>
+            <h2 class="text-2xl font-bold text-white">Employee Portal</h2>
+            <p class="text-gray-300 text-sm mt-1">Scale tickets, routing & operations</p>
+          </div>
+          <div class="p-8">
+            <div id="employee-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
+            <form id="employee-login-form" onsubmit="handleEmployeeLogin(event)">
+              <div class="mb-5">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <i class="fas fa-envelope mr-1 text-rc-gray"></i> Employee Email
+                </label>
+                <input type="email" id="employee-email" required
+                  class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rc-gray focus:ring-2 focus:ring-gray-100 transition-all outline-none"
+                  placeholder="name@reusecanada.ca">
+              </div>
+              <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <i class="fas fa-lock mr-1 text-rc-gray"></i> Password
+                </label>
+                <div class="relative">
+                  <input type="password" id="employee-password" required
+                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rc-gray focus:ring-2 focus:ring-gray-100 transition-all outline-none"
+                    placeholder="Enter your password">
+                  <button type="button" onclick="togglePassword('employee-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-eye"></i>
+                  </button>
+                </div>
+              </div>
+              <button type="submit" id="employee-login-btn"
+                class="w-full bg-rc-gray hover:bg-rc-gray-light text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+                <i class="fas fa-sign-in-alt"></i>
+                Sign In to Employee Portal
+              </button>
+            </form>
+            <div class="mt-4 text-center text-gray-400 text-xs">
+              <i class="fas fa-shield-alt mr-1"></i> Authorized Reuse Canada personnel only
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Footer -->
+      <div class="text-center mt-8 text-green-100/60 text-sm">
+        <p>&copy; 2026 Reuse Canada | Waste-to-Value Recycling</p>
+        <p class="mt-1">Alberta, Canada</p>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Check if already logged in
+    const session = localStorage.getItem('rc_session');
+    if (session) {
+      const data = JSON.parse(session);
+      if (data.user_type === 'customer') window.location.href = '/customer/dashboard';
+      else window.location.href = '/employee/dashboard';
+    }
+
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const icon = btn.querySelector('i');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'fas fa-eye';
+      }
+    }
+
+    async function handleCustomerLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('customer-login-btn');
+      const errDiv = document.getElementById('customer-error');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+      errDiv.classList.add('hidden');
+
+      try {
+        const res = await axios.post('/api/auth/login', {
+          email: document.getElementById('customer-email').value,
+          password: document.getElementById('customer-password').value,
+          user_type: 'customer'
+        });
+        localStorage.setItem('rc_session', JSON.stringify(res.data));
+        window.location.href = '/customer/dashboard';
+      } catch (err) {
+        errDiv.textContent = err.response?.data?.error || 'Login failed. Please check your credentials.';
+        errDiv.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In to Customer Portal';
+      }
+    }
+
+    async function handleEmployeeLogin(e) {
+      e.preventDefault();
+      const btn = document.getElementById('employee-login-btn');
+      const errDiv = document.getElementById('employee-error');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Signing in...';
+      errDiv.classList.add('hidden');
+
+      try {
+        const res = await axios.post('/api/auth/login', {
+          email: document.getElementById('employee-email').value,
+          password: document.getElementById('employee-password').value,
+          user_type: 'employee'
+        });
+        localStorage.setItem('rc_session', JSON.stringify(res.data));
+        window.location.href = '/employee/dashboard';
+      } catch (err) {
+        errDiv.textContent = err.response?.data?.error || 'Login failed. Please check your credentials.';
+        errDiv.classList.remove('hidden');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Sign In to Employee Portal';
+      }
+    }
+
+    function showRegister(type) {
+      alert('Please contact Reuse Canada at info@reusecanada.ca to request access.');
+    }
+  </script>
+  `)
+}

@@ -1,0 +1,171 @@
+// ── Employee Sidebar Navigation Component ──
+export function employeeSidebar(activePage: string): string {
+  const navItems = [
+    { id: 'dashboard', icon: 'fas fa-tachometer-alt', label: 'Dashboard', href: '/employee/dashboard' },
+    { id: 'scale-tickets', icon: 'fas fa-weight', label: 'Scale Tickets', href: '/employee/scale-tickets' },
+    { id: 'pickups', icon: 'fas fa-truck-pickup', label: 'Pickup Requests', href: '/employee/pickups' },
+    { id: 'routing', icon: 'fas fa-route', label: 'Routing', href: '/employee/routing' },
+  ];
+
+  return `
+  <!-- Mobile Header -->
+  <div class="lg:hidden fixed top-0 left-0 right-0 z-50 bg-rc-green-dark text-white shadow-lg">
+    <div class="flex items-center justify-between px-4 py-3">
+      <div class="flex items-center gap-3">
+        <button onclick="toggleMobileSidebar()" class="text-xl"><i class="fas fa-bars"></i></button>
+        <div class="flex items-center gap-2">
+          <i class="fas fa-recycle text-rc-lime"></i>
+          <span class="font-bold">REUSE CANADA</span>
+        </div>
+      </div>
+      <button onclick="handleLogout()" class="text-sm opacity-80 hover:opacity-100">
+        <i class="fas fa-sign-out-alt"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Sidebar Overlay (mobile) -->
+  <div id="sidebar-overlay" class="lg:hidden fixed inset-0 bg-black/50 z-40 hidden" onclick="toggleMobileSidebar()"></div>
+
+  <!-- Sidebar -->
+  <aside id="sidebar" class="fixed left-0 top-0 bottom-0 w-64 rc-gradient-dark text-white z-50 transform -translate-x-full lg:translate-x-0 transition-transform duration-300">
+    <div class="flex flex-col h-full">
+      <!-- Logo -->
+      <div class="p-6 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-white/15 rounded-xl flex items-center justify-center">
+            <i class="fas fa-recycle text-xl text-rc-lime"></i>
+          </div>
+          <div>
+            <div class="font-bold text-lg leading-tight">REUSE CANADA</div>
+            <div class="text-xs text-green-200/60">Operations Portal</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- User Info -->
+      <div class="px-6 py-4 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-rc-lime/30 rounded-full flex items-center justify-center">
+            <i class="fas fa-user text-sm"></i>
+          </div>
+          <div>
+            <div id="sidebar-user-name" class="text-sm font-semibold">Employee</div>
+            <div id="sidebar-user-role" class="text-xs text-green-200/60">Role</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Navigation -->
+      <nav class="flex-1 py-4 overflow-y-auto">
+        ${navItems.map(item => `
+        <a href="${item.href}" 
+          class="flex items-center gap-3 px-6 py-3 text-sm transition-all ${
+            activePage === item.id 
+              ? 'bg-white/15 text-white border-r-4 border-rc-lime font-semibold' 
+              : 'text-green-100/70 hover:bg-white/10 hover:text-white'
+          }">
+          <i class="${item.icon} w-5 text-center"></i>
+          <span>${item.label}</span>
+        </a>
+        `).join('')}
+        
+        <div class="my-4 mx-6 border-t border-white/10"></div>
+        
+        <a href="/employee/field-form" 
+          class="flex items-center gap-3 px-6 py-3 text-sm transition-all ${
+            activePage === 'field-form' 
+              ? 'bg-rc-orange/30 text-white border-r-4 border-rc-orange font-semibold' 
+              : 'text-orange-200/70 hover:bg-rc-orange/20 hover:text-white'
+          }">
+          <i class="fas fa-tablet-alt w-5 text-center"></i>
+          <span>Field Form (iPad)</span>
+        </a>
+      </nav>
+
+      <!-- Logout -->
+      <div class="p-4 border-t border-white/10">
+        <button onclick="handleLogout()" 
+          class="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-green-100/70 hover:bg-red-500/20 hover:text-red-200 rounded-lg transition-all">
+          <i class="fas fa-sign-out-alt w-5 text-center"></i>
+          <span>Sign Out</span>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    function toggleMobileSidebar() {
+      const sidebar = document.getElementById('sidebar');
+      const overlay = document.getElementById('sidebar-overlay');
+      sidebar.classList.toggle('-translate-x-full');
+      overlay.classList.toggle('hidden');
+    }
+  </script>
+  `
+}
+
+export function employeePageWrapper(activePage: string, pageTitle: string, content: string): string {
+  return `
+  ${employeeSidebar(activePage)}
+  
+  <!-- Main Content -->
+  <main class="lg:ml-64 min-h-screen pt-14 lg:pt-0">
+    <!-- Top bar -->
+    <div class="bg-white border-b border-gray-200 px-6 py-4 sticky top-0 lg:top-0 z-30">
+      <div class="flex items-center justify-between">
+        <h1 class="text-xl font-bold text-gray-800">${pageTitle}</h1>
+        <div class="flex items-center gap-4">
+          <span class="text-sm text-gray-500" id="current-datetime"></span>
+          <div class="w-2 h-2 bg-green-400 rounded-full pulse-green" title="Connected"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Page Content -->
+    <div class="p-6">
+      ${content}
+    </div>
+  </main>
+
+  <script>
+    // Auth check
+    const session = JSON.parse(localStorage.getItem('rc_session') || '{}');
+    if (!session.token || session.user_type !== 'employee') {
+      window.location.href = '/login';
+    }
+    // Set user info in sidebar
+    document.getElementById('sidebar-user-name').textContent = session.name || 'Employee';
+    document.getElementById('sidebar-user-role').textContent = (session.role || 'staff').replace('_', ' ').toUpperCase();
+    
+    // Update datetime
+    function updateDateTime() {
+      const now = new Date();
+      document.getElementById('current-datetime').textContent = now.toLocaleString('en-CA', {
+        weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+      });
+    }
+    updateDateTime();
+    setInterval(updateDateTime, 60000);
+
+    function handleLogout() {
+      localStorage.removeItem('rc_session');
+      window.location.href = '/login';
+    }
+
+    // Axios auth interceptor
+    axios.interceptors.request.use(config => {
+      const s = JSON.parse(localStorage.getItem('rc_session') || '{}');
+      if (s.token) config.headers.Authorization = 'Bearer ' + s.token;
+      return config;
+    });
+    axios.interceptors.response.use(r => r, err => {
+      if (err.response?.status === 401) {
+        localStorage.removeItem('rc_session');
+        window.location.href = '/login';
+      }
+      return Promise.reject(err);
+    });
+  </script>
+  `
+}

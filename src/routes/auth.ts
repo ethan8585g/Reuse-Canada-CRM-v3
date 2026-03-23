@@ -26,28 +26,17 @@ authRoutes.post('/login', async (c) => {
     let user: any = null
     
     if (user_type === 'customer') {
-      // Customer login: match by email field (can be username or email)
+      // Customer login: case-insensitive match by email/username
       const loginVal = email.trim()
       user = await c.env.DB.prepare(
-        'SELECT id, email, company_name, contact_name, phone, address, city, province, postal_code, password_hash FROM customers WHERE email = ? AND is_active = 1'
+        'SELECT id, email, company_name, contact_name, phone, address, city, province, postal_code, password_hash FROM customers WHERE LOWER(email) = LOWER(?) AND is_active = 1'
       ).bind(loginVal).first()
-      // Also try case-insensitive match
-      if (!user) {
-        user = await c.env.DB.prepare(
-          'SELECT id, email, company_name, contact_name, phone, address, city, province, postal_code, password_hash FROM customers WHERE LOWER(email) = LOWER(?) AND is_active = 1'
-        ).bind(loginVal).first()
-      }
     } else if (user_type === 'employee') {
-      // Employee login: match by email, case-insensitive
+      // Employee login: case-insensitive match by email
       const loginVal = email.trim()
       user = await c.env.DB.prepare(
-        'SELECT id, email, first_name, last_name, phone, role, password_hash FROM employees WHERE email = ? AND is_active = 1'
+        'SELECT id, email, first_name, last_name, phone, role, password_hash FROM employees WHERE LOWER(email) = LOWER(?) AND is_active = 1'
       ).bind(loginVal).first()
-      if (!user) {
-        user = await c.env.DB.prepare(
-          'SELECT id, email, first_name, last_name, phone, role, password_hash FROM employees WHERE LOWER(email) = LOWER(?) AND is_active = 1'
-        ).bind(loginVal).first()
-      }
     } else {
       return c.json({ error: 'Invalid user type' }, 400)
     }
@@ -64,6 +53,13 @@ authRoutes.post('/login', async (c) => {
     // Create session
     const token = generateToken()
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+
+    // Clean up expired sessions for this user (prevents session table bloat)
+    try {
+      await c.env.DB.prepare(
+        "DELETE FROM sessions WHERE user_id = ? AND user_type = ? AND expires_at < datetime('now')"
+      ).bind(user.id, user_type).run()
+    } catch (e) { /* non-critical cleanup */ }
 
     await c.env.DB.prepare(
       'INSERT INTO sessions (id, user_id, user_type, expires_at) VALUES (?, ?, ?, ?)'

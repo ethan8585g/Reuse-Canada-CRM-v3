@@ -38,8 +38,11 @@ scaleTicketRoutes.get('/', async (c) => {
     const params: any[] = []
     
     if (status) {
-      sql += ' AND st.status = ?'
-      params.push(status)
+      // Support multiple statuses: ?status=a&status=b OR ?status=a,b
+      const allStatus = c.req.queries('status') || [status]
+      const statuses = allStatus.flatMap(s => s.split(','))
+      sql += ` AND st.status IN (${statuses.map(() => '?').join(',')})`
+      params.push(...statuses)
     }
     if (date) {
       sql += ' AND DATE(st.created_at) = ?'

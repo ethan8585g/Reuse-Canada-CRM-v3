@@ -16,6 +16,8 @@ import { renderScaleTickets } from './pages/scaleTickets'
 import { renderPickupManagement } from './pages/pickupManagement'
 import { renderRouting } from './pages/routing'
 import { renderFieldForm } from './pages/fieldForm'
+import { renderCustomerManagement } from './pages/customerManagement'
+import { renderDriverManagement } from './pages/driverManagement'
 
 type Bindings = {
   DB: D1Database
@@ -74,6 +76,8 @@ app.get('/employee/scale-tickets', (c) => c.html(renderScaleTickets()))
 app.get('/employee/scale-tickets/new', (c) => c.html(renderScaleTickets()))
 app.get('/employee/pickups', (c) => c.html(renderPickupManagement()))
 app.get('/employee/routing', (c) => c.html(renderRouting()))
+app.get('/employee/customers', (c) => c.html(renderCustomerManagement()))
+app.get('/employee/drivers', (c) => c.html(renderDriverManagement()))
 app.get('/employee/field-form/:ticketId', (c) => c.html(renderFieldForm()))
 app.get('/employee/field-form', (c) => c.html(renderFieldForm()))
 

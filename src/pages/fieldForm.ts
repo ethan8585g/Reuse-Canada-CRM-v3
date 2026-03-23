@@ -218,11 +218,24 @@ export function renderFieldForm(): string {
     if (!session.token || session.user_type !== 'employee') {
       window.location.href = '/login';
     }
-    axios.interceptors.request.use(config => {
-      const s = JSON.parse(localStorage.getItem('rc_session') || '{}');
-      if (s.token) config.headers.Authorization = 'Bearer ' + s.token;
-      return config;
-    });
+    // Axios auth interceptor — with safety check for CDN loading
+    function setupFieldFormAxios() {
+      if (typeof axios === 'undefined') {
+        console.warn('[RC-FieldForm] Axios not loaded yet, retrying...');
+        setTimeout(setupFieldFormAxios, 200);
+        return;
+      }
+      axios.interceptors.request.use(config => {
+        const s = JSON.parse(localStorage.getItem('rc_session') || '{}');
+        if (s.token) config.headers.Authorization = 'Bearer ' + s.token;
+        return config;
+      });
+      axios.interceptors.response.use(r => r, err => {
+        if (err.response?.status === 401) { localStorage.removeItem('rc_session'); window.location.href = '/login'; }
+        return Promise.reject(err);
+      });
+    }
+    setupFieldFormAxios();
 
     // State
     let currentStep = 1;

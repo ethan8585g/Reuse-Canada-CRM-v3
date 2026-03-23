@@ -6,6 +6,8 @@ export function employeeSidebar(activePage: string): string {
     { id: 'scale-tickets', icon: 'fas fa-receipt', label: 'Ticket History', href: '/employee/scale-tickets' },
     { id: 'pickups', icon: 'fas fa-truck-pickup', label: 'Pickup Requests', href: '/employee/pickups' },
     { id: 'routing', icon: 'fas fa-route', label: 'Routing', href: '/employee/routing' },
+    { id: 'customers', icon: 'fas fa-users', label: 'Customers', href: '/employee/customers' },
+    { id: 'drivers', icon: 'fas fa-id-badge', label: 'Drivers & Staff', href: '/employee/drivers' },
   ];
 
   return `

@@ -86,6 +86,26 @@ export function employeeSidebar(activePage: string): string {
         </a>
       </nav>
 
+      <!-- Live Driver Status Widget -->
+      <div class="px-4 py-3 border-t border-white/10">
+        <div class="bg-white/10 rounded-xl p-3">
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-2 h-2 bg-green-400 rounded-full pulse-green"></div>
+            <span class="text-xs font-bold text-green-200 uppercase tracking-wide">Live Driver Status</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-green-500/20 rounded-lg p-2 text-center">
+              <div class="text-lg font-bold text-green-300" id="sidebar-drivers-on-road">-</div>
+              <div class="text-[10px] text-green-200/70 uppercase font-semibold">On Road</div>
+            </div>
+            <div class="bg-blue-500/20 rounded-lg p-2 text-center">
+              <div class="text-lg font-bold text-blue-300" id="sidebar-drivers-idle">-</div>
+              <div class="text-[10px] text-blue-200/70 uppercase font-semibold">Idle at Yard</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Logout -->
       <div class="p-4 border-t border-white/10">
         <button onclick="handleLogout()" 
@@ -104,6 +124,21 @@ export function employeeSidebar(activePage: string): string {
       sidebar.classList.toggle('-translate-x-full');
       overlay.classList.toggle('hidden');
     }
+
+    // Live driver status polling
+    function loadDriverStatus() {
+      if (typeof axios === 'undefined') { setTimeout(loadDriverStatus, 500); return; }
+      axios.get('/api/employee/driver-status-summary').then(res => {
+        const d = res.data;
+        const onRoadEl = document.getElementById('sidebar-drivers-on-road');
+        const idleEl = document.getElementById('sidebar-drivers-idle');
+        if (onRoadEl) onRoadEl.textContent = d.on_road || 0;
+        if (idleEl) idleEl.textContent = d.idle || 0;
+      }).catch(err => console.warn('[DriverStatus]', err));
+    }
+    // Load immediately and poll every 30 seconds
+    setTimeout(loadDriverStatus, 1000);
+    setInterval(loadDriverStatus, 30000);
   </script>
   `
 }

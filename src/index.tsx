@@ -18,6 +18,7 @@ import { renderRouting } from './pages/routing'
 import { renderFieldForm } from './pages/fieldForm'
 import { renderCustomerManagement } from './pages/customerManagement'
 import { renderDriverManagement } from './pages/driverManagement'
+import { renderDriverPortal } from './pages/driverPortal'
 
 type Bindings = {
   DB: D1Database
@@ -80,5 +81,8 @@ app.get('/employee/customers', (c) => c.html(renderCustomerManagement()))
 app.get('/employee/drivers', (c) => c.html(renderDriverManagement()))
 app.get('/employee/field-form/:ticketId', (c) => c.html(renderFieldForm()))
 app.get('/employee/field-form', (c) => c.html(renderFieldForm()))
+
+// Driver Portal (dedicated driver interface)
+app.get('/driver/portal', (c) => c.html(renderDriverPortal()))
 
 export default app

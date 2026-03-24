@@ -51,6 +51,7 @@ export function renderCustomerManagement(): string {
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Company</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Contact</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Location</th>
+              <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Region</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Username</th>
               <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
               <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase">Pickups</th>
@@ -58,7 +59,7 @@ export function renderCustomerManagement(): string {
             </tr>
           </thead>
           <tbody id="customer-table-body" class="divide-y divide-gray-50">
-            <tr><td colspan="7" class="px-6 py-8 text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>
+            <tr><td colspan="8" class="px-6 py-8 text-center text-gray-400"><i class="fas fa-spinner fa-spin mr-2"></i>Loading...</td></tr>
           </tbody>
         </table>
       </div>
@@ -140,6 +141,15 @@ export function renderCustomerManagement(): string {
                   <label class="block text-sm font-medium text-gray-600 mb-1">Postal Code</label>
                   <input type="text" id="f-postal" class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-rc-green outline-none" placeholder="T6J 2A8">
                 </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-600 mb-1">Region</label>
+                  <select id="f-region" class="w-full px-4 py-2.5 border-2 border-gray-200 rounded-xl focus:border-rc-green outline-none">
+                    <option value="north">North</option>
+                    <option value="south">South</option>
+                    <option value="east">East</option>
+                    <option value="west">West</option>
+                  </select>
+                </div>
               </div>
             </div>
 
@@ -212,7 +222,7 @@ export function renderCustomerManagement(): string {
         document.getElementById('customer-count').textContent = customers.length;
         const tbody = document.getElementById('customer-table-body');
         if (customers.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gray-400"><i class="fas fa-inbox text-2xl mb-2 block"></i>No customers found</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-gray-400"><i class="fas fa-inbox text-2xl mb-2 block"></i>No customers found</td></tr>';
           return;
         }
         tbody.innerHTML = customers.map(c => \`
@@ -223,6 +233,7 @@ export function renderCustomerManagement(): string {
             </td>
             <td class="px-4 py-3 text-sm text-gray-700">\${c.contact_name}</td>
             <td class="px-4 py-3 text-sm text-gray-500">\${c.address ? c.address + ', ' : ''}\${c.city || ''} \${c.province || ''}</td>
+            <td class="px-4 py-3"><span class="px-2 py-0.5 rounded-full text-xs font-semibold \${{'north':'bg-blue-50 text-blue-700','south':'bg-red-50 text-red-700','east':'bg-green-50 text-green-700','west':'bg-purple-50 text-purple-700'}[c.region] || 'bg-gray-50 text-gray-600'}">\${(c.region || 'N/A').toUpperCase()}</span></td>
             <td class="px-4 py-3"><span class="font-mono text-sm bg-gray-100 px-2 py-1 rounded">\${c.email}</span></td>
             <td class="px-4 py-3">
               <span class="px-2.5 py-1 rounded-full text-xs font-semibold \${c.is_active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
@@ -249,6 +260,7 @@ export function renderCustomerManagement(): string {
         document.getElementById('customer-form').reset();
         document.getElementById('f-city').value = 'Edmonton';
         document.getElementById('f-province').value = 'AB';
+        document.getElementById('f-region').value = 'north';
         document.getElementById('f-password').required = true;
         document.getElementById('modal-title').innerHTML = '<i class="fas fa-user-plus mr-2 text-rc-green"></i>New Customer Account';
         document.getElementById('submit-text').textContent = 'Create Customer Account';
@@ -270,6 +282,7 @@ export function renderCustomerManagement(): string {
         document.getElementById('f-province').value = c.province || 'AB';
         document.getElementById('f-postal').value = c.postal_code || '';
         document.getElementById('f-notes').value = c.notes || '';
+        document.getElementById('f-region').value = c.region || 'north';
         document.getElementById('modal-title').innerHTML = '<i class="fas fa-edit mr-2 text-blue-500"></i>Edit Customer: ' + c.company_name;
         document.getElementById('submit-text').textContent = 'Save Changes';
         document.getElementById('customer-modal').style.display = 'flex';
@@ -292,6 +305,7 @@ export function renderCustomerManagement(): string {
           province: document.getElementById('f-province').value,
           postal_code: document.getElementById('f-postal').value,
           notes: document.getElementById('f-notes').value,
+          region: document.getElementById('f-region').value,
         };
         const pwd = document.getElementById('f-password').value;
         if (pwd) data.password = pwd;

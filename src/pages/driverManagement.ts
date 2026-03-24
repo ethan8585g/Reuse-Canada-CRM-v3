@@ -27,7 +27,7 @@ export function renderDriverManagement(): string {
           </select>
         </div>
         <button onclick="openCreateModal()" class="bg-rc-green hover:bg-rc-green-light text-white font-bold py-2.5 px-5 rounded-xl transition-all shadow-lg flex items-center gap-2">
-          <i class="fas fa-user-plus"></i> Add New Driver / Staff
+          <i class="fas fa-user-plus"></i> Create Driver / Staff Account
         </button>
       </div>
 
@@ -205,6 +205,7 @@ export function renderDriverManagement(): string {
                 <span><i class="fas fa-phone mr-1"></i>\${s.phone || 'No phone'}</span>
                 <span class="px-2 py-0.5 rounded text-xs \${s.is_active ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}">\${s.is_active ? 'Active' : 'Inactive'}</span>
               </div>
+              \${s.role === 'driver' ? '<div class="text-xs text-blue-600 mb-2 bg-blue-50 px-2 py-1 rounded"><i class="fas fa-mobile-alt mr-1"></i>Has Driver Portal access (pickups, routes, field form)</div>' : ''}
               <div class="flex gap-2">
                 <button onclick="editStaff(\${s.id})" class="flex-1 px-3 py-2 bg-blue-50 text-blue-600 text-sm font-semibold rounded-lg hover:bg-blue-100 transition-all"><i class="fas fa-edit mr-1"></i>Edit</button>
                 <button onclick="toggleStaff(\${s.id}, \${s.is_active})" class="px-3 py-2 \${s.is_active ? 'bg-red-50 text-red-500 hover:bg-red-100' : 'bg-green-50 text-green-600 hover:bg-green-100'} text-sm font-semibold rounded-lg transition-all">
@@ -222,10 +223,31 @@ export function renderDriverManagement(): string {
         document.getElementById('staff-form').reset();
         document.getElementById('f-role').value = 'driver';
         document.getElementById('f-password').required = true;
-        document.getElementById('modal-title').innerHTML = '<i class="fas fa-user-plus mr-2 text-rc-green"></i>New Driver / Staff';
+        document.getElementById('modal-title').innerHTML = '<i class="fas fa-user-plus mr-2 text-rc-green"></i>Create Driver / Staff Account';
         document.getElementById('submit-text').textContent = 'Create Account';
         document.getElementById('staff-modal').style.display = 'flex';
+        updateRoleHint();
       }
+
+      // Show hint about what access the role gets
+      function updateRoleHint() {
+        const role = document.getElementById('f-role').value;
+        let hint = document.getElementById('role-hint');
+        if (!hint) {
+          hint = document.createElement('div');
+          hint.id = 'role-hint';
+          hint.className = 'mt-2 p-2 bg-blue-50 rounded-lg text-xs text-blue-700';
+          document.getElementById('f-role').parentNode.appendChild(hint);
+        }
+        const hints = {
+          driver: '<i class="fas fa-info-circle mr-1"></i> Drivers get their own login portal with access to pickups, routes, scale tickets (no revenue data), and the iPad field form.',
+          yard_operator: '<i class="fas fa-info-circle mr-1"></i> Yard operators get full employee dashboard access.',
+          manager: '<i class="fas fa-info-circle mr-1"></i> Managers get full employee dashboard access with all features.',
+          admin: '<i class="fas fa-info-circle mr-1"></i> Admins get full access to all features including staff management.',
+        };
+        hint.innerHTML = hints[role] || '';
+      }
+      document.getElementById('f-role').addEventListener('change', updateRoleHint);
 
       function editStaff(id) {
         const s = allStaff.find(x => x.id === id);

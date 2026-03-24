@@ -54,19 +54,31 @@ export function renderFieldForm(): string {
           
           <!-- Photo Preview -->
           <div id="photo-preview-area" class="mb-6">
-            <div id="photo-placeholder" class="border-2 border-dashed border-gray-300 rounded-2xl p-12 text-center bg-gray-50 cursor-pointer hover:border-rc-green hover:bg-green-50 transition-all" onclick="document.getElementById('camera-input').click()">
+            <div id="photo-placeholder" class="border-2 border-dashed border-gray-300 rounded-2xl p-8 text-center bg-gray-50">
               <i class="fas fa-camera text-5xl text-gray-300 mb-4"></i>
-              <p class="text-gray-500 font-semibold">Tap to Take Photo</p>
-              <p class="text-gray-400 text-sm mt-1">or select from gallery</p>
+              <p class="text-gray-500 font-semibold mb-4">Capture tire cage photo</p>
+              <div class="flex flex-col sm:flex-row gap-3 justify-center">
+                <button type="button" onclick="openCamera()" class="px-6 py-3 bg-rc-green text-white font-bold rounded-xl hover:bg-rc-green-light transition-all flex items-center justify-center gap-2">
+                  <i class="fas fa-camera"></i> Take Photo
+                </button>
+                <button type="button" onclick="openGallery()" class="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all flex items-center justify-center gap-2">
+                  <i class="fas fa-images"></i> Choose from Gallery
+                </button>
+              </div>
             </div>
             <img id="photo-preview" class="hidden w-full rounded-2xl border-2 border-rc-green shadow-lg" alt="Tire cage photo">
           </div>
           
-          <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden" onchange="handlePhotoCapture(event)">
+          <!-- Separate inputs: one for camera, one for gallery (fixes iPad bug) -->
+          <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden">
+          <input type="file" id="gallery-input" accept="image/*" class="hidden">
           
           <div id="photo-actions" class="hidden flex gap-3 mb-6">
-            <button onclick="document.getElementById('camera-input').click()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl transition-all">
-              <i class="fas fa-redo mr-1"></i> Retake Photo
+            <button type="button" onclick="openCamera()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl transition-all">
+              <i class="fas fa-camera mr-1"></i> Retake Photo
+            </button>
+            <button type="button" onclick="openGallery()" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold py-3 rounded-xl transition-all">
+              <i class="fas fa-images mr-1"></i> Choose from Gallery
             </button>
           </div>
 
@@ -257,19 +269,65 @@ export function renderFieldForm(): string {
     updateTime();
     setInterval(updateTime, 30000);
 
-    // ── Photo Handling ──
+    // ── Photo Handling (iPad-compatible) ──
+    // Use separate inputs to avoid iOS/iPadOS bug where capture attribute
+    // prevents gallery access, and where reusing the same input doesn't
+    // trigger onchange after the first photo.
+    function openCamera() {
+      const input = document.getElementById('camera-input');
+      // Reset the input value to allow re-selection (fixes iOS bug)
+      input.value = '';
+      input.click();
+    }
+
+    function openGallery() {
+      const input = document.getElementById('gallery-input');
+      input.value = '';
+      input.click();
+    }
+
+    // Attach change listeners to both inputs
+    document.getElementById('camera-input').addEventListener('change', handlePhotoCapture);
+    document.getElementById('gallery-input').addEventListener('change', handlePhotoCapture);
+
     function handlePhotoCapture(event) {
       const file = event.target.files[0];
       if (!file) return;
       
+      // Compress image for iPad (camera photos can be 5-12MB)
       const reader = new FileReader();
       reader.onload = function(e) {
-        photoData = e.target.result;
-        document.getElementById('photo-preview').src = photoData;
-        document.getElementById('photo-preview').classList.remove('hidden');
-        document.getElementById('photo-placeholder').classList.add('hidden');
-        document.getElementById('photo-actions').classList.remove('hidden');
-        document.getElementById('step1-next').disabled = false;
+        const img = new Image();
+        img.onload = function() {
+          // Resize if wider than 1200px (iPad camera is 3024+ px)
+          const maxWidth = 1200;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth) {
+            height = Math.round(height * maxWidth / width);
+            width = maxWidth;
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          // Compress to JPEG at 80% quality (reduces ~8MB to ~200KB)
+          photoData = canvas.toDataURL('image/jpeg', 0.8);
+
+          document.getElementById('photo-preview').src = photoData;
+          document.getElementById('photo-preview').classList.remove('hidden');
+          document.getElementById('photo-placeholder').classList.add('hidden');
+          document.getElementById('photo-actions').classList.remove('hidden');
+          document.getElementById('step1-next').disabled = false;
+        };
+        img.onerror = function() {
+          alert('Failed to load image. Please try again.');
+        };
+        img.src = e.target.result;
+      };
+      reader.onerror = function() {
+        alert('Failed to read image file. Please try again.');
       };
       reader.readAsDataURL(file);
     }
@@ -449,6 +507,7 @@ export function renderFieldForm(): string {
       document.getElementById('field-employee-name').value = '';
       document.getElementById('field-tire-count').value = '';
       document.getElementById('camera-input').value = '';
+      document.getElementById('gallery-input').value = '';
       updateStepIndicator(1);
     }
 

@@ -8,7 +8,7 @@ export function renderLogin(): string {
       <div class="absolute inset-0" style="background-image: url('data:image/svg+xml,%3Csvg width=&quot;60&quot; height=&quot;60&quot; viewBox=&quot;0 0 60 60&quot; xmlns=&quot;http://www.w3.org/2000/svg&quot;%3E%3Cg fill=&quot;none&quot; fill-rule=&quot;evenodd&quot;%3E%3Cg fill=&quot;%23ffffff&quot; fill-opacity=&quot;0.3&quot;%3E%3Cpath d=&quot;M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z&quot;/%3E%3C/g%3E%3C/g%3E%3C/svg%3E');"></div>
     </div>
     
-    <div class="relative z-10 w-full max-w-5xl">
+    <div class="relative z-10 w-full max-w-md">
       <!-- Logo & Header -->
       <div class="text-center mb-8">
         <div class="inline-flex items-center justify-center w-20 h-20 bg-white rounded-2xl shadow-lg mb-4">
@@ -18,104 +18,109 @@ export function renderLogin(): string {
         <p class="text-green-100 text-lg">Operations & CRM Platform</p>
       </div>
       
-      <!-- Login Cards -->
-      <div class="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-        
-        <!-- Customer Login -->
-        <div class="glass rounded-2xl shadow-2xl overflow-hidden card-hover">
-          <div class="bg-rc-green p-6 text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-3">
-              <i class="fas fa-store text-3xl text-white"></i>
-            </div>
-            <h2 class="text-2xl font-bold text-white">Customer Portal</h2>
-            <p class="text-green-100 text-sm mt-1">Request tire pickups & track status</p>
+      <!-- CUSTOMER LOGIN (shown by default) -->
+      <div id="customer-login-card" class="glass rounded-2xl shadow-2xl overflow-hidden card-hover transition-all duration-300">
+        <div class="bg-rc-green p-6 text-center">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-3">
+            <i class="fas fa-store text-3xl text-white"></i>
           </div>
-          <div class="p-8">
-            <div id="customer-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
-            <form id="customer-login-form" onsubmit="handleCustomerLogin(event)">
-              <div class="mb-5">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                  <i class="fas fa-user mr-1 text-rc-green"></i> Username
-                </label>
-                <input type="text" id="customer-email" required
-                  class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rc-green focus:ring-2 focus:ring-green-100 transition-all outline-none"
-                  placeholder="Enter your username">
-              </div>
-              <div class="mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                  <i class="fas fa-lock mr-1 text-rc-green"></i> Password
-                </label>
-                <div class="relative">
-                  <input type="password" id="customer-password" required
-                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rc-green focus:ring-2 focus:ring-green-100 transition-all outline-none"
-                    placeholder="Enter your password">
-                  <button type="button" onclick="togglePassword('customer-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </div>
-              </div>
-              <button type="submit" id="customer-login-btn"
-                class="w-full bg-rc-green hover:bg-rc-green-light text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
-                <i class="fas fa-sign-in-alt"></i>
-                Sign In to Customer Portal
-              </button>
-            </form>
-            <div class="mt-4 text-center">
-              <a href="#" onclick="showRegister('customer')" class="text-rc-green hover:text-rc-green-light text-sm font-medium">
-                <i class="fas fa-user-plus mr-1"></i> New customer? Request access
-              </a>
-            </div>
-          </div>
+          <h2 class="text-2xl font-bold text-white">Customer Portal</h2>
+          <p class="text-green-100 text-sm mt-1">Request tire pickups & track status</p>
         </div>
-        
-        <!-- Employee Login -->
-        <div class="glass rounded-2xl shadow-2xl overflow-hidden card-hover">
-          <div class="bg-rc-gray p-6 text-center">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-3">
-              <i class="fas fa-hard-hat text-3xl text-white"></i>
+        <div class="p-8">
+          <div id="customer-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
+          <form id="customer-login-form" onsubmit="handleCustomerLogin(event)">
+            <div class="mb-5">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="fas fa-user mr-1 text-rc-green"></i> Username
+              </label>
+              <input type="text" id="customer-email" required
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rc-green focus:ring-2 focus:ring-green-100 transition-all outline-none"
+                placeholder="Enter your username">
             </div>
-            <h2 class="text-2xl font-bold text-white">Employee Portal</h2>
-            <p class="text-gray-300 text-sm mt-1">Scale tickets, routing & operations</p>
-          </div>
-          <div class="p-8">
-            <div id="employee-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
-            <form id="employee-login-form" onsubmit="handleEmployeeLogin(event)">
-              <div class="mb-5">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                  <i class="fas fa-envelope mr-1 text-rc-gray"></i> Employee Email
-                </label>
-                <input type="text" id="employee-email" required
-                  class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rc-gray focus:ring-2 focus:ring-gray-100 transition-all outline-none"
-                  placeholder="name@reuse-canada.ca">
+            <div class="mb-6">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="fas fa-lock mr-1 text-rc-green"></i> Password
+              </label>
+              <div class="relative">
+                <input type="password" id="customer-password" required
+                  class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rc-green focus:ring-2 focus:ring-green-100 transition-all outline-none"
+                  placeholder="Enter your password">
+                <button type="button" onclick="togglePassword('customer-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <i class="fas fa-eye"></i>
+                </button>
               </div>
-              <div class="mb-6">
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                  <i class="fas fa-lock mr-1 text-rc-gray"></i> Password
-                </label>
-                <div class="relative">
-                  <input type="password" id="employee-password" required
-                    class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rc-gray focus:ring-2 focus:ring-gray-100 transition-all outline-none"
-                    placeholder="Enter your password">
-                  <button type="button" onclick="togglePassword('employee-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
-                    <i class="fas fa-eye"></i>
-                  </button>
-                </div>
-              </div>
-              <button type="submit" id="employee-login-btn"
-                class="w-full bg-rc-gray hover:bg-rc-gray-light text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
-                <i class="fas fa-sign-in-alt"></i>
-                Sign In to Employee Portal
-              </button>
-            </form>
-            <div class="mt-4 text-center text-gray-400 text-xs">
-              <i class="fas fa-shield-alt mr-1"></i> Authorized Reuse Canada personnel only
             </div>
+            <button type="submit" id="customer-login-btn"
+              class="w-full bg-rc-green hover:bg-rc-green-light text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+              <i class="fas fa-sign-in-alt"></i>
+              Sign In to Customer Portal
+            </button>
+          </form>
+          <div class="mt-4 text-center">
+            <a href="#" onclick="showRegister('customer')" class="text-rc-green hover:text-rc-green-light text-sm font-medium">
+              <i class="fas fa-user-plus mr-1"></i> New customer? Request access
+            </a>
           </div>
         </div>
       </div>
+
+      <!-- EMPLOYEE LOGIN (hidden by default) -->
+      <div id="employee-login-card" class="glass rounded-2xl shadow-2xl overflow-hidden card-hover transition-all duration-300" style="display:none">
+        <div class="bg-rc-gray p-6 text-center">
+          <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 rounded-full mb-3">
+            <i class="fas fa-hard-hat text-3xl text-white"></i>
+          </div>
+          <h2 class="text-2xl font-bold text-white">Employee Portal</h2>
+          <p class="text-gray-300 text-sm mt-1">Scale tickets, routing & operations</p>
+        </div>
+        <div class="p-8">
+          <div id="employee-error" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm"></div>
+          <form id="employee-login-form" onsubmit="handleEmployeeLogin(event)">
+            <div class="mb-5">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="fas fa-envelope mr-1 text-rc-gray"></i> Employee Email
+              </label>
+              <input type="text" id="employee-email" required
+                class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rc-gray focus:ring-2 focus:ring-gray-100 transition-all outline-none"
+                placeholder="name@reuse-canada.ca">
+            </div>
+            <div class="mb-6">
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                <i class="fas fa-lock mr-1 text-rc-gray"></i> Password
+              </label>
+              <div class="relative">
+                <input type="password" id="employee-password" required
+                  class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-rc-gray focus:ring-2 focus:ring-gray-100 transition-all outline-none"
+                  placeholder="Enter your password">
+                <button type="button" onclick="togglePassword('employee-password', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                  <i class="fas fa-eye"></i>
+                </button>
+              </div>
+            </div>
+            <button type="submit" id="employee-login-btn"
+              class="w-full bg-rc-gray hover:bg-rc-gray-light text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2">
+              <i class="fas fa-sign-in-alt"></i>
+              Sign In to Employee Portal
+            </button>
+          </form>
+          <div class="mt-4 text-center text-gray-400 text-xs">
+            <i class="fas fa-shield-alt mr-1"></i> Authorized Reuse Canada personnel only
+          </div>
+        </div>
+      </div>
+
+      <!-- Toggle Button -->
+      <div class="text-center mt-6">
+        <button id="toggle-login-btn" onclick="toggleLoginPortal()"
+          class="inline-flex items-center gap-2 px-5 py-2.5 bg-white/15 hover:bg-white/25 text-white text-sm font-semibold rounded-xl transition-all backdrop-blur-sm border border-white/20">
+          <i class="fas fa-hard-hat" id="toggle-icon"></i>
+          <span id="toggle-text">Employee Login</span>
+        </button>
+      </div>
       
       <!-- Footer -->
-      <div class="text-center mt-8 text-green-100/60 text-sm">
+      <div class="text-center mt-6 text-green-100/60 text-sm">
         <p>&copy; 2026 Reuse Canada | Waste-to-Value Recycling</p>
         <p class="mt-1">Alberta, Canada</p>
       </div>
@@ -128,7 +133,30 @@ export function renderLogin(): string {
     if (session) {
       const data = JSON.parse(session);
       if (data.user_type === 'customer') window.location.href = '/customer/dashboard';
+      else if (data.role === 'driver') window.location.href = '/driver/portal';
       else window.location.href = '/employee/dashboard';
+    }
+
+    let showingEmployee = false;
+
+    function toggleLoginPortal() {
+      showingEmployee = !showingEmployee;
+      const custCard = document.getElementById('customer-login-card');
+      const empCard = document.getElementById('employee-login-card');
+      const toggleText = document.getElementById('toggle-text');
+      const toggleIcon = document.getElementById('toggle-icon');
+
+      if (showingEmployee) {
+        custCard.style.display = 'none';
+        empCard.style.display = 'block';
+        toggleText.textContent = 'Customer Login';
+        toggleIcon.className = 'fas fa-store';
+      } else {
+        empCard.style.display = 'none';
+        custCard.style.display = 'block';
+        toggleText.textContent = 'Employee Login';
+        toggleIcon.className = 'fas fa-hard-hat';
+      }
     }
 
     function togglePassword(inputId, btn) {
@@ -182,7 +210,12 @@ export function renderLogin(): string {
           user_type: 'employee'
         });
         localStorage.setItem('rc_session', JSON.stringify(res.data));
-        window.location.href = '/employee/dashboard';
+        // Drivers go to driver portal, everyone else to employee dashboard
+        if (res.data.role === 'driver') {
+          window.location.href = '/driver/portal';
+        } else {
+          window.location.href = '/employee/dashboard';
+        }
       } catch (err) {
         errDiv.textContent = err.response?.data?.error || 'Login failed. Please check your credentials.';
         errDiv.classList.remove('hidden');

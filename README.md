@@ -4,6 +4,7 @@
 - **Name**: Reuse Canada CRM
 - **Goal**: Unified platform for managing tire pickup logistics, digital scale ticketing, customer relationships, and route planning
 - **Tech Stack**: Hono + TypeScript + TailwindCSS + Cloudflare Workers (D1 SQLite)
+- **Version**: v3.0
 
 ## Live URLs
 - **GitHub**: https://github.com/ethan8585g/Reuse-Canada-CRM-v3
@@ -38,32 +39,29 @@
 
 ### 2. Employee Dashboard (`/employee/dashboard`)
 - **Clickable stat cards** -- Pending Pickups, Today's Routes, Open Scale Tickets, Completed Today all link directly to their respective pages
+- **Dashboard Mini-Map** -- Google Maps with pinpoints for all scheduled pickups for the current day (color-coded by status)
+- **Performance Micro-Graph** -- 7-day bar chart for completed items + daily volume stats (pickups, ~tires, kg weighed, tickets)
+- **Live Driver Status** -- Real-time sidebar widget showing On Road vs Idle at Yard counts (polls every 30s)
+- **Sidebar-only navigation** -- Removed redundant Quick Actions section; all navigation through the left sidebar
 - Recent pickup requests and scale tickets with status badges
-- Quick action cards: Scale House, Manage Pickups, Plan Routes, Onboard Customer, Add Driver, Field Form
-- Refresh button and pending badge with pulse animation
 - Axios CDN fallback and safety checks
 
 ### 3. Customer Onboarding & Management (`/employee/customers`)
 - **Full CRUD** for customer accounts
-- Create customer with: username, password, company name, contact, phone, address, city, province, postal code, notes
+- Create customer with: username, password, company name, contact, phone, address, city, province, postal code, **region (N/S/E/W)**, notes
 - Edit existing customer details (including password reset)
 - Activate / deactivate customer accounts
 - Search by company, contact, city, or username
 - Filter by active/inactive status
+- **Region column** in customer table (North/South/East/West)
 - Stats: Total Active, Total Inactive, Pending Pickups (live from DB), Added This Month
-- Pending pickups count shown per-customer in the table
 
 ### 4. Driver & Staff Management (`/employee/drivers`)
 - **Tabbed interface**: Staff tab and Vehicles tab
 - **Staff management**: Create/edit/toggle employees with roles (admin, manager, driver, yard_operator)
 - Role-based card display with color-coded badges and icons
 - Password management for all staff accounts
-- Phone and role assignment
-- **Vehicle Management** (Vehicles tab):
-  - Create/edit/toggle vehicles
-  - Vehicle types: flatbed, roll-off, cube van, pickup, trailer
-  - Plate number and tare weight tracking
-  - Active/inactive status management
+- **Vehicle Management** (Vehicles tab): Create/edit/toggle vehicles with types, plates, tare weights
 
 ### 5. Scale House (`/employee/scale-house`)
 Full-featured scale house ticketing station:
@@ -72,7 +70,7 @@ Full-featured scale house ticketing station:
 - **Auto Pricing**: Pulls rates from pricing table by material type. Calculates subtotal + 5% GST
 - **Square Terminal Payment**: Sends $ amount to Square Reader for card tap/insert
 - **Receipt Printing**: 80mm thermal receipt layout with REUSE CANADA branding
-- **Ticket Queue**: Shows all active/pending tickets in sidebar (now supports multi-status filter)
+- **Ticket Queue**: Shows all active/pending tickets in sidebar (multi-status filter)
 - **Simulation Mode**: "Sim" button for testing without physical scale hardware
 
 ### 6. Scale Ticket History (`/employee/scale-tickets`)
@@ -85,11 +83,14 @@ Full-featured scale house ticketing station:
 - Submit tire pickup requests (count, type, date, time preference, notes)
 - View request status and history with color-coded status badges
 - Stats: Pending, Scheduled, Completed, Total Tires
-- Axios safety checks and retry logic
 
 ### 8. Pickup Management (`/employee/pickups`)
 - Pickup request cards with full details (customer, address, tires, dates)
+- **Regional Filtering**: North/South/East/West dropdown filter
+- **Region badges** on each pickup card
 - Driver assignment modal with date scheduling
+- **Notify toggle** on each card (bell icon) for auto-SMS notification
+- **Notify checkbox** in Assign & Schedule modal
 - Status lifecycle: pending -> confirmed -> scheduled -> in_progress -> completed
 - Cancel pickup option
 - Field Form integration from scheduled pickups
@@ -108,6 +109,24 @@ Full-featured scale house ticketing station:
 - Step 4: Review & submit (auto-creates scale ticket)
 - Pre-fills data when linked from pickup management
 
+### 11. Driver Portal (`/driver/portal`) -- NEW v3.0
+- **Dedicated driver interface** for mobile/iPad use
+- **Status toggle**: On Road vs At Yard (updates live sidebar widget)
+- **Assigned pickups list** with start/complete actions
+- **Proof of Work upload**: Camera photo capture of cage/bin
+  - Auto-captures GPS coordinates and timestamp
+  - Sends automated notification to location manager: "Cage/Bin was swapped/picked up. Thanks for your business!"
+- Notification confirmation toast
+
+### 12. Automated Notifications System -- NEW v3.0
+- **SMS schedule notification**: "Reuse Canada is scheduled for your pickup on [Date] at [Time]"
+  - Triggered on status change to scheduled/confirmed when notify is enabled
+  - Controlled per-pickup with bell toggle icon
+- **Proof of work notification**: "Cage/Bin was swapped/picked up. Thanks for your business!"
+  - Triggered when driver uploads proof photo
+- All notifications logged in `notification_log` table
+- View notification history via API
+
 ## API Endpoints
 
 ### Auth
@@ -116,32 +135,50 @@ Full-featured scale house ticketing station:
 - `GET /api/auth/verify` -- Verify session
 
 ### Employee Dashboard
-- `GET /api/employee/dashboard` -- Dashboard stats + recent data
+- `GET /api/employee/dashboard` -- Dashboard stats + recent data + performance + daily_stats
+
+### Driver Status (NEW v3.0)
+- `GET /api/employee/driver-status-summary` -- On Road vs Idle counts (sidebar widget)
+- `POST /api/employee/driver-status` -- Update driver status (on_road/idle/at_pickup/returning)
+
+### Map Data (NEW v3.0)
+- `GET /api/employee/todays-pickups-map` -- Today's scheduled pickups with GPS for map
+
+### Proof of Work (NEW v3.0)
+- `POST /api/employee/pickup-proof` -- Submit proof (photo, GPS, timestamp, notes)
+- `GET /api/employee/pickup-proof/:id` -- View proof records for a pickup
+
+### Notifications (NEW v3.0)
+- `GET /api/employee/notifications` -- Notification log (last 50)
 
 ### Customer Management
 - `GET /api/employee/customers` -- Active customers (for dropdowns)
 - `GET /api/employee/customers/all?status=active|inactive` -- Full customer list with pending_pickups count
-- `POST /api/employee/customers` -- Create new customer account
-- `PUT /api/employee/customers/:id` -- Update customer
+- `POST /api/employee/customers` -- Create new customer account (with region field)
+- `PUT /api/employee/customers/:id` -- Update customer (with region field)
 - `POST /api/employee/customers/:id/toggle` -- Activate/deactivate
 
 ### Staff Management
 - `GET /api/employee/staff?role=driver|admin|manager|yard_operator` -- List employees
-- `POST /api/employee/staff` -- Create new employee
+- `POST /api/employee/staff` -- Create new employee (auto-creates driver_status for drivers)
 - `PUT /api/employee/staff/:id` -- Update employee
 - `POST /api/employee/staff/:id/toggle` -- Activate/deactivate
 
 ### Vehicle Management
-- `GET /api/employee/vehicles?all=true` -- List vehicles (all=true includes inactive)
+- `GET /api/employee/vehicles?all=true` -- List vehicles
 - `POST /api/employee/vehicles` -- Create new vehicle
 - `PUT /api/employee/vehicles/:id` -- Update vehicle
 - `POST /api/employee/vehicles/:id/toggle` -- Activate/deactivate
 
-### Driver List
-- `GET /api/employee/drivers` -- Active drivers for route/pickup assignment
+### Pickups (Updated v3.0)
+- `GET /api/pickups?status=x&date=YYYY-MM-DD&region=north|south|east|west` -- List with region filter
+- `GET /api/pickups/:id` -- Single pickup detail
+- `POST /api/pickups/:id/status` -- Update status (with auto-notification if notify enabled)
+- `POST /api/pickups/:id/assign` -- Assign driver + schedule (with notify option)
+- `POST /api/pickups/:id/notify` -- Toggle notify_customer flag
 
 ### Scale Tickets
-- `GET /api/scale-tickets?status=x,y,z&date=YYYY-MM-DD` -- List (multi-status filter support)
+- `GET /api/scale-tickets?status=x,y,z&date=YYYY-MM-DD` -- List (multi-status filter)
 - `GET /api/scale-tickets/:id` -- Detail
 - `POST /api/scale-tickets` -- Create ticket
 - `POST /api/scale-tickets/field` -- Create from iPad field form
@@ -150,23 +187,17 @@ Full-featured scale house ticketing station:
 - `POST /api/scale-tickets/:id/payment` -- Update payment status
 - `POST /api/scale-tickets/:id/void` -- Void ticket
 
-### Customer Pickups
-- `GET /api/customer/pickups` -- Customer's own pickup requests
-- `POST /api/customer/pickups` -- Submit new pickup request
-- `GET /api/customer/pickups/:id` -- Single pickup detail
-
-### Employee Pickups
-- `GET /api/pickups?status=x&date=YYYY-MM-DD` -- List pickup requests (multi-status)
-- `GET /api/pickups/:id` -- Single pickup detail
-- `POST /api/pickups/:id/status` -- Update pickup status
-- `POST /api/pickups/:id/assign` -- Assign driver and schedule
-
 ### Routes
 - `GET /api/routes?date=x&employee_id=y` -- List routes
 - `GET /api/routes/:id` -- Route with stops
 - `POST /api/routes` -- Create route with stops
 - `POST /api/routes/:id/status` -- Update route status
 - `POST /api/routes/:routeId/stops/:stopId/status` -- Update stop status
+
+### Customer Pickups
+- `GET /api/customer/pickups` -- Customer's own pickup requests
+- `POST /api/customer/pickups` -- Submit new pickup request
+- `GET /api/customer/pickups/:id` -- Single pickup detail
 
 ### Square Payments
 - `POST /api/square/terminal-checkout` -- Send to Square Reader
@@ -186,16 +217,19 @@ Full-featured scale house ticketing station:
 ## Data Architecture
 
 ### Database: Cloudflare D1 (SQLite)
-- **customers** -- Company info, contacts, addresses, coordinates, login credentials
+- **customers** -- Company info, contacts, addresses, coordinates, **region (N/S/E/W)**, login credentials
 - **employees** -- Staff with roles (admin, manager, driver, yard_operator)
 - **sessions** -- Auth tokens with expiry (auto-cleaned on login)
-- **pickup_requests** -- Tire pickup requests with lifecycle status
+- **pickup_requests** -- Tire pickup requests with lifecycle status, **notify_customer flag**
 - **routes** -- Route plans with driver/vehicle assignment
 - **route_stops** -- Individual stops within routes
 - **scale_tickets** -- Core ticket with field data, weights, pricing, payments
 - **vehicles** -- Fleet with plate numbers, types, tare weights
 - **pricing** -- Material-type pricing table (per-kg and per-tire rates)
 - **payment_log** -- Payment audit trail
+- **driver_status** -- Real-time driver location and status tracking (NEW v3.0)
+- **pickup_proof** -- Photo proof of work with GPS and timestamps (NEW v3.0)
+- **notification_log** -- SMS/email notification history (NEW v3.0)
 
 ### Pricing Table (Default Rates)
 | Material | Price/kg | Price/tire |
@@ -236,16 +270,35 @@ SQUARE_ACCESS_TOKEN=<configured>
 - **Platform**: Cloudflare Pages (Workers + D1)
 - **GitHub**: https://github.com/ethan8585g/Reuse-Canada-CRM-v3
 - **Status**: Running in sandbox
-- **Last Updated**: 2026-03-23
+- **Last Updated**: 2026-03-24
 
-## Recent Changes (v2.3)
+## Recent Changes (v3.0)
+
+### UI/UX Refinements
+- **Sidebar Cleanup**: Removed redundant Quick Actions navigation from dashboard body. Left-hand sidebar is the sole navigation source.
+- **Live Driver Status Widget**: Real-time On Road vs Idle at Yard counts in sidebar, polling every 30 seconds.
+- **Dashboard Mini-Map**: Google Maps with pinpoints for all scheduled pickups for the current day, color-coded by status.
+- **Performance Micro-Graph**: 7-day bar chart for completed items with daily volume stats (pickups, tires, weight, tickets).
+
+### Functional Features
+- **Regional Filtering**: North/South/East/West filter on Pickup Management page. Region badges on cards. Region column in Customer table.
+- **Driver Portal** (`/driver/portal`): Dedicated driver interface with status toggle, assigned pickups, and proof of work upload.
+- **Proof of Work**: Camera photo upload with GPS coordinates + timestamp. Auto-sends notification to location manager.
+- **Automated Notifications**: Notify toggle per-pickup. SMS on schedule/confirm: "Reuse Canada is scheduled for your pickup on [Date] at [Time]". Proof SMS: "Cage/Bin was swapped/picked up. Thanks for your business!"
+
+### Database Changes
+- Added `region` column to customers table
+- Created `driver_status` table (employee_id, status, GPS, route)
+- Created `pickup_proof` table (photo, GPS, timestamp, notification_sent)
+- Created `notification_log` table (type, recipient, message)
+- Added `notify_customer` column to pickup_requests
+
+### Previous Changes (v2.3)
 - Customer Onboarding Module with full CRUD
 - Driver & Staff Management with role-based cards
 - Vehicle Management (create, edit, toggle active/inactive)
 - Dashboard stat cards are now clickable (link to respective pages)
-- Quick Actions include Onboard Customer and Add Driver
-- Fixed: scale-tickets multi-status filter (was breaking Scale House ticket queue)
-- Fixed: field form Axios CDN safety check and 401 interceptor
-- Fixed: auth.ts consolidated duplicate queries, added session cleanup
+- Fixed: scale-tickets multi-status filter
+- Fixed: field form Axios CDN safety check
+- Fixed: auth.ts consolidated duplicate queries + session cleanup
 - Fixed: customer management pending pickups stat uses live DB data
-- Added vehicle CRUD APIs

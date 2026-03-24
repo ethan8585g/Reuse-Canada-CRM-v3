@@ -4,34 +4,37 @@
 - **Name**: Reuse Canada CRM
 - **Goal**: Unified platform for managing tire pickup logistics, digital scale ticketing, customer relationships, and route planning
 - **Tech Stack**: Hono + TypeScript + TailwindCSS + Cloudflare Workers (D1 SQLite)
-- **Version**: v3.0
+- **Version**: v3.1
 
 ## Live URLs
 - **GitHub**: https://github.com/ethan8585g/Reuse-Canada-CRM-v3
 
 ## Login Credentials
 
-### Customer Portal
+### Customer Portal (default login screen)
 | Username | Password | Company |
 |----------|----------|---------|
 | KALTIRE | TIRES! | Kal Tire - Edmonton South |
 | GOINGTIRE | Tires2024! | Going Tire - Spruce Grove |
 
-### Employee Portal
-| Email | Password | Role |
-|-------|----------|------|
-| Ethan@reuse-canada.ca | Tires123! | Admin |
-| admin@reusecanada.ca | admin123 | Admin |
-| mike@reusecanada.ca | driver123 | Driver |
-| sarah@reusecanada.ca | driver123 | Driver |
-| james@reusecanada.ca | yard123 | Yard Operator |
-| dave@reusecanada.ca | driver123 | Driver |
+### Employee Portal (click "Employee Login" toggle at bottom)
+| Email | Password | Role | Portal |
+|-------|----------|------|--------|
+| Ethan@reuse-canada.ca | Tires123! | Admin | Employee Dashboard |
+| admin@reusecanada.ca | admin123 | Admin | Employee Dashboard |
+| mike@reusecanada.ca | driver123 | Driver | **Driver Portal** |
+| sarah@reusecanada.ca | driver123 | Driver | **Driver Portal** |
+| james@reusecanada.ca | yard123 | Yard Operator | Employee Dashboard |
+| dave@reusecanada.ca | driver123 | Driver | **Driver Portal** |
+
+> **Note**: Drivers are automatically redirected to `/driver/portal` on login. Admins/managers/yard operators go to `/employee/dashboard`.
 
 ## Completed Features
 
-### 1. Dual Login System (`/`)
-- Customer Portal (green) -- username-based login
-- Employee Portal (dark gray) -- email-based login
+### 1. Login System (`/`) -- UPDATED v3.1
+- **Customer-first login**: Shows customer portal as the default login
+- **Toggle button**: "Employee Login" button at the bottom switches to employee portal view
+- **Driver auto-redirect**: Employees with `driver` role are automatically sent to `/driver/portal`
 - Session management with token auth
 - Auto-redirect if already logged in
 - Case-insensitive login matching
@@ -56,9 +59,11 @@
 - **Region column** in customer table (North/South/East/West)
 - Stats: Total Active, Total Inactive, Pending Pickups (live from DB), Added This Month
 
-### 4. Driver & Staff Management (`/employee/drivers`)
+### 4. Driver & Staff Management (`/employee/drivers`) -- UPDATED v3.1
 - **Tabbed interface**: Staff tab and Vehicles tab
-- **Staff management**: Create/edit/toggle employees with roles (admin, manager, driver, yard_operator)
+- **Create Driver Accounts**: Admin can create driver accounts with email/password -- drivers get their own login
+- **Role hints**: When creating staff, shows what access level each role gets
+- **Driver Portal badge**: Driver cards show "Has Driver Portal access" indicator
 - Role-based card display with color-coded badges and icons
 - Password management for all staff accounts
 - **Vehicle Management** (Vehicles tab): Create/edit/toggle vehicles with types, plates, tare weights
@@ -101,24 +106,30 @@ Full-featured scale house ticketing station:
 - **Google Maps Integration**: Live route visualization with markers, directions, and distance/time calculation
 - Route stops timeline (Yard -> Stops -> Return)
 
-### 10. iPad Field Form (`/employee/field-form`)
+### 10. iPad Field Form (`/employee/field-form`) -- FIXED v3.1
 - 4-step touch-optimized workflow
-- Step 1: Tire cage photo capture (camera or gallery)
+- Step 1: Tire cage photo capture
+  - **Separate "Take Photo" and "Choose from Gallery" buttons** (fixes iOS/iPadOS camera bug)
+  - **Image compression**: Resizes to max 1200px, JPEG 80% quality (reduces 8MB iPad photos to ~200KB)
+  - **Input reset on each use** (fixes iOS re-selection bug)
+  - Error handlers for image load/read failures
 - Step 2: Store name, employee name, tire count
 - Step 3: Digital signature pad (touch-enabled)
 - Step 4: Review & submit (auto-creates scale ticket)
 - Pre-fills data when linked from pickup management
 
-### 11. Driver Portal (`/driver/portal`) -- NEW v3.0
-- **Dedicated driver interface** for mobile/iPad use
-- **Status toggle**: On Road vs At Yard (updates live sidebar widget)
-- **Assigned pickups list** with start/complete actions
-- **Proof of Work upload**: Camera photo capture of cage/bin
-  - Auto-captures GPS coordinates and timestamp
-  - Sends automated notification to location manager: "Cage/Bin was swapped/picked up. Thanks for your business!"
-- Notification confirmation toast
+### 11. Driver Portal (`/driver/portal`) -- REWRITTEN v3.1
+- **Full dashboard** with sidebar navigation (Dashboard, My Pickups, Routes, Scale Tickets, iPad Field Form)
+- **Mobile responsive** with collapsible sidebar
+- **Status toggle**: On Road vs At Yard (updates live sidebar widget on employee dashboard)
+- **Dashboard tab**: Stats (Assigned, In Progress, Completed Today, Status) + quick pickup list
+- **Pickups tab**: Full pickup list with Start/Complete/Proof actions + direct link to iPad field form
+- **Routes tab**: View assigned routes with distance, duration, vehicle info
+- **Scale Tickets tab**: View ticket list (ticket number, customer, material, weight, date) -- **NO revenue, pricing, or payment data visible**
+- **Proof of Work upload**: Camera photo capture of cage/bin with GPS + timestamp
+- Auto-notification to location manager on proof submission
 
-### 12. Automated Notifications System -- NEW v3.0
+### 12. Automated Notifications System
 - **SMS schedule notification**: "Reuse Canada is scheduled for your pickup on [Date] at [Time]"
   - Triggered on status change to scheduled/confirmed when notify is enabled
   - Controlled per-pickup with bell toggle icon
@@ -126,6 +137,22 @@ Full-featured scale house ticketing station:
   - Triggered when driver uploads proof photo
 - All notifications logged in `notification_log` table
 - View notification history via API
+
+## Driver Permission Matrix
+
+| Feature | Admin | Manager | Yard Operator | Driver |
+|---------|-------|---------|---------------|--------|
+| Employee Dashboard | Yes | Yes | Yes | No |
+| Driver Portal | No | No | No | **Yes** |
+| Scale House (full) | Yes | Yes | Yes | No |
+| Scale Tickets (view, no $) | Yes | Yes | Yes | **Yes** |
+| Pickup Management | Yes | Yes | Yes | **Yes** (own only) |
+| Routes (view) | Yes | Yes | Yes | **Yes** (own only) |
+| iPad Field Form | Yes | Yes | Yes | **Yes** |
+| Customer Management | Yes | Yes | No | No |
+| Staff Management | Yes | Yes | No | No |
+| Revenue / Pricing Data | Yes | Yes | Yes | **No** |
+| Proof of Work Upload | Yes | Yes | No | **Yes** |
 
 ## API Endpoints
 
@@ -137,18 +164,18 @@ Full-featured scale house ticketing station:
 ### Employee Dashboard
 - `GET /api/employee/dashboard` -- Dashboard stats + recent data + performance + daily_stats
 
-### Driver Status (NEW v3.0)
+### Driver Status
 - `GET /api/employee/driver-status-summary` -- On Road vs Idle counts (sidebar widget)
 - `POST /api/employee/driver-status` -- Update driver status (on_road/idle/at_pickup/returning)
 
-### Map Data (NEW v3.0)
+### Map Data
 - `GET /api/employee/todays-pickups-map` -- Today's scheduled pickups with GPS for map
 
-### Proof of Work (NEW v3.0)
+### Proof of Work
 - `POST /api/employee/pickup-proof` -- Submit proof (photo, GPS, timestamp, notes)
 - `GET /api/employee/pickup-proof/:id` -- View proof records for a pickup
 
-### Notifications (NEW v3.0)
+### Notifications
 - `GET /api/employee/notifications` -- Notification log (last 50)
 
 ### Customer Management
@@ -170,7 +197,7 @@ Full-featured scale house ticketing station:
 - `PUT /api/employee/vehicles/:id` -- Update vehicle
 - `POST /api/employee/vehicles/:id/toggle` -- Activate/deactivate
 
-### Pickups (Updated v3.0)
+### Pickups
 - `GET /api/pickups?status=x&date=YYYY-MM-DD&region=north|south|east|west` -- List with region filter
 - `GET /api/pickups/:id` -- Single pickup detail
 - `POST /api/pickups/:id/status` -- Update status (with auto-notification if notify enabled)
@@ -218,7 +245,7 @@ Full-featured scale house ticketing station:
 
 ### Database: Cloudflare D1 (SQLite)
 - **customers** -- Company info, contacts, addresses, coordinates, **region (N/S/E/W)**, login credentials
-- **employees** -- Staff with roles (admin, manager, driver, yard_operator)
+- **employees** -- Staff with roles (admin, manager, driver, yard_operator) -- each with their own login
 - **sessions** -- Auth tokens with expiry (auto-cleaned on login)
 - **pickup_requests** -- Tire pickup requests with lifecycle status, **notify_customer flag**
 - **routes** -- Route plans with driver/vehicle assignment
@@ -227,9 +254,9 @@ Full-featured scale house ticketing station:
 - **vehicles** -- Fleet with plate numbers, types, tare weights
 - **pricing** -- Material-type pricing table (per-kg and per-tire rates)
 - **payment_log** -- Payment audit trail
-- **driver_status** -- Real-time driver location and status tracking (NEW v3.0)
-- **pickup_proof** -- Photo proof of work with GPS and timestamps (NEW v3.0)
-- **notification_log** -- SMS/email notification history (NEW v3.0)
+- **driver_status** -- Real-time driver location and status tracking
+- **pickup_proof** -- Photo proof of work with GPS and timestamps
+- **notification_log** -- SMS/email notification history
 
 ### Pricing Table (Default Rates)
 | Material | Price/kg | Price/tire |
@@ -269,36 +296,42 @@ SQUARE_ACCESS_TOKEN=<configured>
 ## Deployment
 - **Platform**: Cloudflare Pages (Workers + D1)
 - **GitHub**: https://github.com/ethan8585g/Reuse-Canada-CRM-v3
-- **Status**: Running in sandbox
+- **Status**: Running in sandbox (Cloudflare deployment pending API key update)
 - **Last Updated**: 2026-03-24
 
-## Recent Changes (v3.0)
+## Recent Changes (v3.1)
 
-### UI/UX Refinements
-- **Sidebar Cleanup**: Removed redundant Quick Actions navigation from dashboard body. Left-hand sidebar is the sole navigation source.
-- **Live Driver Status Widget**: Real-time On Road vs Idle at Yard counts in sidebar, polling every 30 seconds.
-- **Dashboard Mini-Map**: Google Maps with pinpoints for all scheduled pickups for the current day, color-coded by status.
-- **Performance Micro-Graph**: 7-day bar chart for completed items with daily volume stats (pickups, tires, weight, tickets).
+### Login Redesign
+- Single customer-first login page (no side-by-side cards)
+- "Employee Login" toggle button at the bottom of the page
+- Clicking the toggle swaps between customer and employee login forms
+- Drivers (role=driver) auto-redirect to `/driver/portal` on login
 
-### Functional Features
-- **Regional Filtering**: North/South/East/West filter on Pickup Management page. Region badges on cards. Region column in Customer table.
-- **Driver Portal** (`/driver/portal`): Dedicated driver interface with status toggle, assigned pickups, and proof of work upload.
-- **Proof of Work**: Camera photo upload with GPS coordinates + timestamp. Auto-sends notification to location manager.
-- **Automated Notifications**: Notify toggle per-pickup. SMS on schedule/confirm: "Reuse Canada is scheduled for your pickup on [Date] at [Time]". Proof SMS: "Cage/Bin was swapped/picked up. Thanks for your business!"
+### Driver Account System
+- Admins create driver accounts from Driver & Staff Management page
+- Each driver gets their own email/password login credentials
+- Role hint on create form shows access level for each role
+- Driver cards show "Has Driver Portal access" badge
+- Drivers access: pickups, routes, scale tickets (no revenue), iPad field form
+- Drivers cannot see: revenue data, pricing, payment amounts, customer management, staff management
 
-### Database Changes
-- Added `region` column to customers table
-- Created `driver_status` table (employee_id, status, GPS, route)
-- Created `pickup_proof` table (photo, GPS, timestamp, notification_sent)
-- Created `notification_log` table (type, recipient, message)
-- Added `notify_customer` column to pickup_requests
+### Driver Portal Rewrite
+- Full sidebar navigation (Dashboard, Pickups, Routes, Scale Tickets, iPad Form)
+- Dashboard with stats cards (Assigned, In Progress, Completed Today, Status)
+- Pickups tab with full action buttons (Start, Upload Proof, Complete, iPad Form)
+- Routes tab showing assigned routes with distance/duration
+- Scale Tickets tab showing tickets without any pricing/revenue/payment data
+- Mobile responsive with collapsible sidebar
 
-### Previous Changes (v2.3)
-- Customer Onboarding Module with full CRUD
-- Driver & Staff Management with role-based cards
-- Vehicle Management (create, edit, toggle active/inactive)
-- Dashboard stat cards are now clickable (link to respective pages)
-- Fixed: scale-tickets multi-status filter
-- Fixed: field form Axios CDN safety check
-- Fixed: auth.ts consolidated duplicate queries + session cleanup
-- Fixed: customer management pending pickups stat uses live DB data
+### iPad Field Form Fix
+- Split single file input into separate "Take Photo" and "Choose from Gallery" buttons
+- Fixes iOS/iPadOS bug where `capture="environment"` attribute prevents gallery access
+- Image compression: 1200px max width, JPEG 80% quality (reduces 8MB to ~200KB)
+- File input value reset on each use (fixes iOS onchange re-trigger bug)
+- Added error handlers for image load and FileReader failures
+
+### Previous Changes (v3.0)
+- Sidebar cleanup (removed Quick Actions), live driver-status widget, dashboard mini-map
+- Regional filtering (N/S/E/W), driver workflow with proof-of-work
+- Automated status triggers (SMS notifications), performance micro-graph
+- New DB tables: driver_status, pickup_proof, notification_log
